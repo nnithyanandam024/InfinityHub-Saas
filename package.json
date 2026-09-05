@@ -1,0 +1,23 @@
+{
+  "name": "infinityhub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "InfinityHub - Multi-Tenant Business SaaS Platform",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run dev --workspace=@infinityhub/api",
+    "build:web": "npm run build --workspace=apps/web",
+    "preview:web": "npm run preview --workspace=apps/web",
+    "start:mobile": "npm run start --workspace=@infinityhub/mobile",
+    "android": "npm run android --workspace=@infinityhub/mobile",
+    "type-check": "tsc -b --force",
+    "clean": "node -e \"console.log('Cleaning build artifacts...')\""
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
