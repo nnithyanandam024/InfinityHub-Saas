@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@infinityhub/types": ["../../packages/types/src"],
+      "@infinityhub/types/*": ["../../packages/types/src/*"],
+      "@infinityhub/constants": ["../../packages/constants/src"],
+      "@infinityhub/constants/*": ["../../packages/constants/src/*"],
+      "@infinityhub/validation": ["../../packages/validation/src"],
+      "@infinityhub/validation/*": ["../../packages/validation/src/*"],
+      "@infinityhub/ui": ["../../packages/ui/src"],
+      "@infinityhub/ui/*": ["../../packages/ui/src/*"],
+      "@infinityhub/config": ["../../packages/config/src"],
+      "@infinityhub/config/*": ["../../packages/config/src/*"],
+      "@infinityhub/api-client": ["../../packages/api-client/src"],
+      "@infinityhub/api-client/*": ["../../packages/api-client/src/*"]
+    }
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../../packages/types" },
+    { "path": "../../packages/constants" },
+    { "path": "../../packages/validation" },
+    { "path": "../../packages/ui" },
+    { "path": "../../packages/config" },
+    { "path": "../../packages/api-client" }
+  ]
+}
