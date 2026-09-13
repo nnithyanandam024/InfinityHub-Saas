@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "commonjs",
+    "lib": ["es2017"],
+    "allowJs": true,
+    "jsx": "react-native",
+    "noEmit": true,
+    "isolatedModules": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "react-native": ["./node_modules/react-native/types/index.d.ts"],
+      "@infinityhub/types": ["../../packages/types/src"],
+      "@infinityhub/types/*": ["../../packages/types/src/*"],
+      "@infinityhub/constants": ["../../packages/constants/src"],
+      "@infinityhub/constants/*": ["../../packages/constants/src/*"],
+      "@infinityhub/validation": ["../../packages/validation/src"],
+      "@infinityhub/validation/*": ["../../packages/validation/src/*"],
+      "@infinityhub/ui": ["../../packages/ui/src"],
+      "@infinityhub/ui/*": ["../../packages/ui/src/*"],
+      "@infinityhub/config": ["../../packages/config/src"],
+      "@infinityhub/config/*": ["../../packages/config/src/*"],
+      "@infinityhub/api-client": ["../../packages/api-client/src"],
+      "@infinityhub/api-client/*": ["../../packages/api-client/src/*"]
+    }
+  },
+  "include": ["src/**/*", "App.tsx"]
+}

@@ -1,0 +1,22 @@
+rootProject.name = 'InfinityHubMobile'
+include ':app'
+
+def gradlePluginPath = file('../node_modules/@react-native/gradle-plugin')
+if (!gradlePluginPath.exists()) {
+    gradlePluginPath = file('../../../node_modules/@react-native/gradle-plugin')
+}
+includeBuild(gradlePluginPath)
+
+def resolveNodeModule(String moduleName) {
+    def local = file("../node_modules/${moduleName}/android")
+    if (local.exists()) return local
+    def root = file("../../../node_modules/${moduleName}/android")
+    if (root.exists()) return root
+    throw new GradleException("Could not find ${moduleName} in node_modules")
+}
+
+include ':react-native-safe-area-context'
+project(':react-native-safe-area-context').projectDir = resolveNodeModule('react-native-safe-area-context')
+
+include ':react-native-screens'
+project(':react-native-screens').projectDir = resolveNodeModule('react-native-screens')
