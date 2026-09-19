@@ -14,6 +14,7 @@ import { PlatformOverviewPage } from '../pages/platform/PlatformOverviewPage';
 import { AppsCatalogPage } from '../pages/platform/AppsCatalogPage';
 import { AppDetailPage } from '../pages/platform/AppDetailPage';
 import { ProvisioningPage } from '../pages/platform/ProvisioningPage';
+import { MobileDownloadPage } from '../pages/public/MobileDownloadPage';
 
 // Auth Pages
 import { LoginPage } from '../pages/auth/LoginPage';
@@ -88,6 +89,7 @@ export const AppRoutes: React.FC = () => {
       <Route path="/apps" element={<AppsCatalogPage />} />
       <Route path="/apps/:appId" element={<AppDetailPage />} />
       <Route path="/provision" element={<ProvisioningPage />} />
+      <Route path="/download-apk" element={<MobileDownloadPage />} />
 
       {/* Authentication Routes */}
       <Route element={<AuthLayout />}>

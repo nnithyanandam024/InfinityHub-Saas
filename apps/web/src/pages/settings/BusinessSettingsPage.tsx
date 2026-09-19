@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTenant } from '../../context/TenantContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -30,7 +30,11 @@ import {
   AlertCircle,
   HelpCircle,
   Boxes,
-  Receipt
+  Receipt,
+  UploadCloud,
+  FileImage,
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 
 const CURRENCY_OPTIONS = [
@@ -132,6 +136,116 @@ export const BusinessSettingsPage: React.FC = () => {
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
   const [showLogs, setShowLogs] = useState(false);
   const [isSavingBranding, setIsSavingBranding] = useState(false);
+
+  // Local File Upload & Drag-and-Drop state
+  const [logoSourceTab, setLogoSourceTab] = useState<'upload' | 'url' | 'presets'>('upload');
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  const [uploadedFileInfo, setUploadedFileInfo] = useState<{
+    name: string;
+    sizeKb: number;
+    width?: number;
+    height?: number;
+  } | null>(null);
+  const [detectedNameSuggestion, setDetectedNameSuggestion] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper to extract clean human-readable name from filename
+  const extractCleanNameFromFilename = (filename: string): string => {
+    if (!filename) return '';
+    let clean = filename.replace(/\.[^/.]+$/, '');
+    clean = clean.replace(/[-_](logo|icon|app|brand|branding|client|store|retail|preview|thumb|image)$/gi, '');
+    clean = clean.replace(/^(logo|icon|app|brand|branding|client|store|retail)[-_]/gi, '');
+    clean = clean.replace(/[-_.]+/g, ' ');
+    clean = clean
+      .split(' ')
+      .filter(Boolean)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ')
+      .trim();
+    return clean;
+  };
+
+  // Handler for local file processing
+  const handleProcessLocalFile = (file: File) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file (PNG, JPG, SVG, WebP)', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image size exceeds 5MB. Please choose a smaller image', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const dataUrl = e.target?.result as string;
+      if (!dataUrl) return;
+
+      // Extract image dimensions
+      const img = new Image();
+      img.onload = () => {
+        setUploadedFileInfo({
+          name: file.name,
+          sizeKb: Math.round(file.size / 1024),
+          width: img.naturalWidth || img.width,
+          height: img.naturalHeight || img.height
+        });
+      };
+      img.src = dataUrl;
+
+      setLogoUrl(dataUrl);
+
+      // Smart name extraction
+      const extracted = extractCleanNameFromFilename(file.name);
+      if (extracted) {
+        setDetectedNameSuggestion(extracted);
+        // If appName is default or matches store, auto-apply it
+        if (!appName || appName === tenant?.name || appName === 'Store Mobile Client') {
+          setAppName(extracted);
+          setShortName(extracted.slice(0, 14));
+        }
+        showToast(`Loaded "${file.name}" & extracted name "${extracted}"`, 'success');
+      } else {
+        showToast(`Loaded "${file.name}" successfully`, 'success');
+      }
+    };
+    reader.onerror = () => {
+      showToast('Failed to read local file', 'error');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleProcessLocalFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleRemoveLocalFile = () => {
+    setUploadedFileInfo(null);
+    setDetectedNameSuggestion(null);
+    setLogoUrl('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    showToast('Local logo removed', 'info');
+  };
 
   useEffect(() => {
     if (tenant) {
@@ -278,8 +392,23 @@ export const BusinessSettingsPage: React.FC = () => {
         primaryColor !== branding.primaryColor)
   );
 
-  const downloadUrl = `http://localhost:4000/api/v1/tenants/download-apk?tenantId=${tenant?.id || 'tenant-abc-supermarket'}`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(downloadUrl)}`;
+  // Dynamic host-aware download resolver
+  const isLocalApi =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  const downloadUrl = isLocalApi
+    ? `http://localhost:4000/api/v1/tenants/download-apk?tenantId=${tenant?.id || 'tenant-abc-supermarket'}`
+    : `/downloads/infinityhub-store.apk`;
+
+  const safeApkFilename = `${(appName || tenant?.name || 'store').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}-release.apk`;
+
+  const mobileInstallUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/download-apk?tenantId=${tenant?.id || 'tenant-abc-supermarket'}&name=${encodeURIComponent(appName || tenant?.name || '')}`
+      : downloadUrl;
+
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(mobileInstallUrl)}`;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -537,7 +666,7 @@ export const BusinessSettingsPage: React.FC = () => {
 
               {branding?.apkStatus === 'ready' && (
                 <div className="shrink-0 flex items-center gap-2">
-                  <a href={downloadUrl} download>
+                  <a href={downloadUrl} download={safeApkFilename}>
                     <Button size="sm" variant="primary" icon={Download} className="bg-blue-500 hover:bg-blue-400 text-white font-bold">
                       Download APK
                     </Button>
@@ -563,6 +692,29 @@ export const BusinessSettingsPage: React.FC = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-5">
+                  {/* Smart Local Name Suggestion Banner */}
+                  {detectedNameSuggestion && (
+                    <div className="p-3 bg-gradient-to-r from-blue-50 via-indigo-50/70 to-blue-50 border border-blue-200 rounded-xl flex items-center justify-between gap-3 shadow-2xs animate-in fade-in">
+                      <div className="flex items-center gap-2.5 text-xs text-blue-950 min-w-0">
+                        <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span className="truncate">
+                          Extracted from file: <strong className="text-blue-900 font-extrabold">{detectedNameSuggestion}</strong>
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAppName(detectedNameSuggestion);
+                          setShortName(detectedNameSuggestion.slice(0, 14));
+                          showToast(`Applied "${detectedNameSuggestion}" to App Name & Launcher Label`, 'success');
+                        }}
+                        className="px-3 py-1 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors shrink-0 cursor-pointer shadow-2xs"
+                      >
+                        Apply as App Name
+                      </button>
+                    </div>
+                  )}
+
                   {/* App Name */}
                   <Input
                     label="Mobile App Full Name"
@@ -584,62 +736,209 @@ export const BusinessSettingsPage: React.FC = () => {
                     placeholder="e.g. ABC Super (Max 14 chars)"
                   />
 
-                  {/* Company Logo Selector */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-700 block">
-                      Company Logo / App Icon
-                    </label>
+                  {/* Company Logo Selector with Drag & Drop */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 block">
+                        Company Logo / App Icon
+                      </label>
 
-                    <div className="flex items-center gap-3 mb-3">
-                      {logoUrl ? (
-                        <img
-                          src={logoUrl}
-                          alt="Logo Preview"
-                          className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-2xs"
-                        />
-                      ) : (
-                        <div
-                          className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white text-base shadow-2xs"
-                          style={{ backgroundColor: primaryColor }}
+                      {/* Source Mode Tabs */}
+                      <div className="flex p-0.5 bg-slate-100 rounded-lg border border-slate-200 text-[11px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => setLogoSourceTab('upload')}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                            logoSourceTab === 'upload'
+                              ? 'bg-white text-blue-700 shadow-xs'
+                              : 'text-slate-500 hover:text-slate-900'
+                          }`}
                         >
-                          {appName.slice(0, 2).toUpperCase() || 'ST'}
-                        </div>
-                      )}
-
-                      <div className="flex-1">
-                        <Input
-                          label=""
-                          disabled={!canEdit}
-                          value={logoUrl}
-                          onChange={e => setLogoUrl(e.target.value)}
-                          placeholder="Paste Logo Image URL or pick preset below"
-                        />
+                          <UploadCloud className="w-3 h-3 text-blue-600" />
+                          <span>Local File / Drag</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLogoSourceTab('url')}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                            logoSourceTab === 'url'
+                              ? 'bg-white text-blue-700 shadow-xs'
+                              : 'text-slate-500 hover:text-slate-900'
+                          }`}
+                        >
+                          <ImageIcon className="w-3 h-3 text-slate-500" />
+                          <span>Web URL</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLogoSourceTab('presets')}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                            logoSourceTab === 'presets'
+                              ? 'bg-white text-blue-700 shadow-xs'
+                              : 'text-slate-500 hover:text-slate-900'
+                          }`}
+                        >
+                          <Sparkles className="w-3 h-3 text-amber-500" />
+                          <span>Presets</span>
+                        </button>
                       </div>
                     </div>
 
-                    {/* Preset Logo Chips */}
-                    <div className="space-y-1.5">
-                      <span className="text-[11px] font-semibold text-slate-400 block">
-                        Quick Preset Logos:
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        {PRESET_LOGOS.map(pre => (
-                          <button
-                            key={pre.name}
-                            type="button"
-                            onClick={() => setLogoUrl(pre.url)}
-                            className={`px-2.5 py-1 text-xs rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer ${
-                              logoUrl === pre.url
-                                ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
-                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    {/* Hidden Native File Input */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                      className="hidden"
+                      onChange={e => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleProcessLocalFile(e.target.files[0]);
+                        }
+                      }}
+                    />
+
+                    {/* TAB 1: LOCAL FILE DRAG & DROP */}
+                    {logoSourceTab === 'upload' && (
+                      <div className="space-y-2">
+                        {uploadedFileInfo ? (
+                          /* Uploaded File Inspector */
+                          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3 shadow-2xs">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <img
+                                src={logoUrl}
+                                alt="Local Logo Preview"
+                                className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-2xs bg-white shrink-0"
+                              />
+                              <div className="min-w-0">
+                                <span className="text-xs font-bold text-slate-800 block truncate">
+                                  {uploadedFileInfo.name}
+                                </span>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[10px] text-slate-400 font-medium">
+                                    {uploadedFileInfo.sizeKb} KB
+                                  </span>
+                                  {uploadedFileInfo.width && uploadedFileInfo.height && (
+                                    <span className="text-[10px] text-slate-400 font-mono">
+                                      • {uploadedFileInfo.width}×{uploadedFileInfo.height}px
+                                    </span>
+                                  )}
+                                  <Badge variant="success" size="sm">
+                                    Local
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
+                              >
+                                Replace
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleRemoveLocalFile}
+                                className="p-1 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 cursor-pointer transition-colors"
+                                title="Remove File"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          /* Drag and Drop Zone */
+                          <div
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                            onClick={() => fileInputRef.current?.click()}
+                            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+                              isDraggingFile
+                                ? 'border-blue-500 bg-blue-50/70 ring-4 ring-blue-500/10'
+                                : 'border-slate-300 hover:border-blue-400 bg-slate-50/70 hover:bg-slate-100/60'
                             }`}
                           >
-                            <span>{pre.icon}</span>
-                            <span>{pre.name}</span>
-                          </button>
-                        ))}
+                            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-2.5">
+                              <UploadCloud className="w-5 h-5" />
+                            </div>
+                            <h4 className="text-xs font-bold text-slate-800">
+                              Drag and drop your local logo here
+                            </h4>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              or click to browse from your device
+                            </p>
+                            <span className="inline-block mt-2 text-[10px] text-slate-400 font-mono">
+                              PNG, JPG, SVG, WebP up to 5MB • Auto-detects store name
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    )}
+
+                    {/* TAB 2: IMAGE URL */}
+                    {logoSourceTab === 'url' && (
+                      <div className="flex items-center gap-3">
+                        {logoUrl ? (
+                          <img
+                            src={logoUrl}
+                            alt="Logo Preview"
+                            className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-2xs bg-white shrink-0"
+                          />
+                        ) : (
+                          <div
+                            className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white text-base shadow-2xs shrink-0"
+                            style={{ backgroundColor: primaryColor }}
+                          >
+                            {appName.slice(0, 2).toUpperCase() || 'ST'}
+                          </div>
+                        )}
+
+                        <div className="flex-1">
+                          <Input
+                            label=""
+                            disabled={!canEdit}
+                            value={logoUrl}
+                            onChange={e => {
+                              setLogoUrl(e.target.value);
+                              setUploadedFileInfo(null);
+                            }}
+                            placeholder="https://example.com/logo.png"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 3: PRESETS */}
+                    {logoSourceTab === 'presets' && (
+                      <div className="space-y-1.5">
+                        <span className="text-[11px] font-semibold text-slate-400 block">
+                          Choose a pre-made store emblem:
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {PRESET_LOGOS.map(pre => (
+                            <button
+                              key={pre.name}
+                              type="button"
+                              onClick={() => {
+                                setLogoUrl(pre.url);
+                                setUploadedFileInfo(null);
+                                setDetectedNameSuggestion(null);
+                              }}
+                              className={`px-2.5 py-1 text-xs rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer ${
+                                logoUrl === pre.url
+                                  ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              <span>{pre.icon}</span>
+                              <span>{pre.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Primary Brand Color */}
@@ -861,7 +1160,7 @@ export const BusinessSettingsPage: React.FC = () => {
                         </p>
 
                         <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                          <a href={downloadUrl} download>
+                          <a href={downloadUrl} download={safeApkFilename}>
                             <Button size="sm" variant="primary" icon={Download} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
                               Download {appName}.apk
                             </Button>
