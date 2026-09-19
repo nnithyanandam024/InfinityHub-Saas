@@ -25,7 +25,7 @@ export const APP_NAME = 'InfinityHub';
 
 export const APPLICATION_BUNDLES: Record<ApplicationId, ApplicationId[]> = {
   pos: ['pos', 'inventory'], // Billing & POS natively includes full Inventory Management
-  inventory: ['inventory', 'pos'], // Retail inventory tenants can access billing terminal
+  inventory: ['inventory'], // Pure Inventory Management (stock, catalog, suppliers, purchases). Billing & POS is NOT included.
   restaurant: ['restaurant', 'pos', 'inventory'],
   employee: ['employee'],
   appointment: ['appointment']
@@ -144,7 +144,7 @@ export const PLATFORM_APPLICATIONS: PlatformApplication[] = [
     id: 'inventory',
     name: 'Inventory Management',
     tagline: 'Precision Stock Control & Supply Chain',
-    description: 'Track SKU catalogs, warehouse stock, categories, suppliers, purchase invoices, and live valuation ledger.',
+    description: 'Track master SKU catalogs, multi-warehouse stock, categories, suppliers, purchase orders, and valuation ledgers (billing & counter checkout not included).',
     iconName: 'Boxes',
     isAvailable: true,
     startingPrice: 999,

@@ -173,15 +173,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   <LayoutDashboard className="w-4 h-4 shrink-0" />
                   <span>Dashboard</span>
                 </NavLink>
-
-                <NavLink
-                  to="/pos/terminal"
-                  onClick={onClose}
-                  className={({ isActive }) => getNavLinkClass(isActive)}
-                >
-                  <Receipt className="w-4 h-4 shrink-0 text-blue-600" />
-                  <span className="flex-1 font-semibold text-blue-700">Billing Counter</span>
-                </NavLink>
               </nav>
             </div>
           )}

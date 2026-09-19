@@ -79,6 +79,8 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
                               styles.statusPill,
                               app.status === 'active'
                                 ? styles.statusActive
+                                : app.status === 'locked'
+                                ? styles.statusLocked
                                 : app.status === 'ready'
                                 ? styles.statusReady
                                 : styles.statusPreview
@@ -89,12 +91,20 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
                                 styles.statusText,
                                 app.status === 'active'
                                   ? styles.statusTextActive
+                                  : app.status === 'locked'
+                                  ? styles.statusTextLocked
                                   : app.status === 'ready'
                                   ? styles.statusTextReady
                                   : styles.statusTextPreview
                               ]}
                             >
-                              {app.status === 'active' ? 'Active Suite' : app.status === 'ready' ? 'Ready' : 'Preview'}
+                              {app.status === 'active'
+                                ? 'Active Suite'
+                                : app.status === 'locked'
+                                ? 'Upgrade Plan'
+                                : app.status === 'ready'
+                                ? 'Ready'
+                                : 'Preview'}
                             </Text>
                           </View>
                         </View>
@@ -210,6 +220,11 @@ const styles = StyleSheet.create({
   statusPreview: {
     backgroundColor: theme.colors.surfaceSubtle
   },
+  statusLocked: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A'
+  },
   statusText: {
     fontSize: 10,
     fontWeight: '700'
@@ -222,5 +237,8 @@ const styles = StyleSheet.create({
   },
   statusTextPreview: {
     color: theme.colors.muted
+  },
+  statusTextLocked: {
+    color: '#B45309'
   }
 });

@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { Alert } from 'react-native';
+import { useTenant } from './TenantContext';
 
 export type AppId = 'inventory' | 'pos' | 'app_catalog' | 'platform_admin';
 
@@ -6,9 +8,10 @@ export interface SuiteApp {
   id: AppId;
   name: string;
   tagline: string;
-  status: 'active' | 'ready' | 'preview';
+  status: 'active' | 'ready' | 'preview' | 'locked';
   icon: 'package' | 'cart' | 'store' | 'shield';
   description: string;
+  isLicensed?: boolean;
 }
 
 export const SUITE_APPS: SuiteApp[] = [
@@ -18,7 +21,8 @@ export const SUITE_APPS: SuiteApp[] = [
     tagline: 'Stock control, barcodes & warehouses',
     status: 'active',
     icon: 'package',
-    description: 'Track SKU catalog, low-stock reorders, batch expiration, and physical audit counts.'
+    description: 'Track SKU catalog, low-stock reorders, batch expiration, and physical audit counts.',
+    isLicensed: true
   },
   {
     id: 'pos',
@@ -26,7 +30,8 @@ export const SUITE_APPS: SuiteApp[] = [
     tagline: 'Retail barcode checkout',
     status: 'ready',
     icon: 'cart',
-    description: 'Fast register checkout, digital receipt generation, and payment handling.'
+    description: 'Fast register checkout, digital receipt generation, and payment handling.',
+    isLicensed: true
   },
   {
     id: 'app_catalog',
@@ -34,7 +39,8 @@ export const SUITE_APPS: SuiteApp[] = [
     tagline: 'Explore business suites',
     status: 'preview',
     icon: 'store',
-    description: 'Discover Restaurant Management, HR/Payroll, and Appointment booking modules.'
+    description: 'Discover Restaurant Management, HR/Payroll, and Appointment booking modules.',
+    isLicensed: false
   }
 ];
 
@@ -43,19 +49,68 @@ interface AppContextType {
   activeApp: SuiteApp;
   switchApp: (appId: AppId) => void;
   availableApps: SuiteApp[];
+  isPosLicensed: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeAppId, setActiveAppId] = useState<AppId>('inventory');
+  const { tenant } = useTenant();
+  const isPosLicensed = tenant?.applicationId === 'pos';
 
-  const activeApp =
-    SUITE_APPS.find(a => a.id === activeAppId) || SUITE_APPS[0];
+  const [activeAppId, setActiveAppId] = useState<AppId>(() => (isPosLicensed ? 'pos' : 'inventory'));
+
+  useEffect(() => {
+    // If current store is not licensed for POS, fallback safely to inventory
+    if (!isPosLicensed && activeAppId === 'pos') {
+      setActiveAppId('inventory');
+    }
+  }, [isPosLicensed, activeAppId]);
 
   const switchApp = (appId: AppId) => {
+    if (appId === 'pos' && !isPosLicensed) {
+      Alert.alert(
+        'License Required',
+        `Your active workspace (${tenant?.name || 'Store'}) is licensed for Inventory Management. Billing & POS counter is not included in this plan.`
+      );
+      return;
+    }
     setActiveAppId(appId);
   };
+
+  const availableApps: SuiteApp[] = useMemo(() => [
+    {
+      id: 'inventory',
+      name: 'Inventory Management',
+      tagline: isPosLicensed ? 'Included with Billing & POS' : 'Stock control, barcodes & warehouses',
+      status: activeAppId === 'inventory' ? 'active' : 'ready',
+      icon: 'package',
+      description: 'Track SKU catalog, low-stock reorders, batch expiration, and physical audit counts.',
+      isLicensed: true
+    },
+    {
+      id: 'pos',
+      name: 'Billing & POS',
+      tagline: isPosLicensed ? 'Retail barcode checkout' : 'Requires POS Subscription',
+      status: isPosLicensed ? (activeAppId === 'pos' ? 'active' : 'ready') : 'locked',
+      icon: 'cart',
+      description: isPosLicensed
+        ? 'Fast register checkout, digital receipt generation, and payment handling.'
+        : 'Billing counter is not included in Inventory Management. Upgrade to Billing & POS to unlock.',
+      isLicensed: isPosLicensed
+    },
+    {
+      id: 'app_catalog',
+      name: 'App Marketplace',
+      tagline: 'Explore business suites',
+      status: 'preview',
+      icon: 'store',
+      description: 'Discover Restaurant Management, HR/Payroll, and Appointment booking modules.',
+      isLicensed: false
+    }
+  ], [isPosLicensed, activeAppId]);
+
+  const activeApp = availableApps.find(a => a.id === activeAppId) || availableApps[0];
 
   return (
     <AppContext.Provider
@@ -63,7 +118,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeAppId,
         activeApp,
         switchApp,
-        availableApps: SUITE_APPS
+        availableApps,
+        isPosLicensed
       }}
     >
       {children}
@@ -78,3 +134,4 @@ export const useApp = (): AppContextType => {
   }
   return context;
 };
+

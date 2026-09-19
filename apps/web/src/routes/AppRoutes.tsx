@@ -323,11 +323,11 @@ export const AppRoutes: React.FC = () => {
           }
         />
 
-        {/* Standalone & Integrated Billing & POS Workspace Routes */}
+        {/* Standalone Billing & POS Workspace Routes (Includes full Inventory natively) */}
         <Route
           path="/pos"
           element={
-            <RequireApplication appId={['pos', 'inventory']}>
+            <RequireApplication appId="pos">
               <Navigate to="/pos/terminal" replace />
             </RequireApplication>
           }
@@ -335,7 +335,7 @@ export const AppRoutes: React.FC = () => {
         <Route
           path="/pos/dashboard"
           element={
-            <RequireApplication appId={['pos', 'inventory']}>
+            <RequireApplication appId="pos">
               <Navigate to="/pos/terminal" replace />
             </RequireApplication>
           }
@@ -343,7 +343,7 @@ export const AppRoutes: React.FC = () => {
         <Route
           path="/pos/terminal"
           element={
-            <RequireApplication appId={['pos', 'inventory']}>
+            <RequireApplication appId="pos">
               <PosTerminalPage />
             </RequireApplication>
           }
@@ -351,7 +351,7 @@ export const AppRoutes: React.FC = () => {
         <Route
           path="/pos/invoices"
           element={
-            <RequireApplication appId={['pos', 'inventory']}>
+            <RequireApplication appId="pos">
               <PosInvoicesPage />
             </RequireApplication>
           }
@@ -359,7 +359,7 @@ export const AppRoutes: React.FC = () => {
         <Route
           path="/pos/shifts"
           element={
-            <RequireApplication appId={['pos', 'inventory']}>
+            <RequireApplication appId="pos">
               <PosShiftsPage />
             </RequireApplication>
           }
@@ -367,7 +367,7 @@ export const AppRoutes: React.FC = () => {
         <Route
           path="/pos/customers"
           element={
-            <RequireApplication appId={['pos', 'inventory']}>
+            <RequireApplication appId="pos">
               <PosCustomersPage />
             </RequireApplication>
           }
