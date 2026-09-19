@@ -23,7 +23,11 @@ export type IconName =
   | 'alert'
   | 'settings'
   | 'shield'
-  | 'reports';
+  | 'reports'
+  | 'tag'
+  | 'receipt'
+  | 'wallet'
+  | 'cash';
 
 interface IconProps {
   name: IconName;
@@ -348,6 +352,44 @@ export const Icon: React.FC<IconProps> = ({
               <View style={{ width: 2.2, height: s * 0.52, backgroundColor: color, borderRadius: 0.5, marginRight: 2 }} />
               <View style={{ width: 2.2, height: s * 0.38, backgroundColor: color, borderRadius: 0.5 }} />
             </View>
+          </View>
+        </View>
+      );
+
+    case 'tag':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          <View style={{ width: s * 0.75, height: s * 0.75, borderWidth: 1.8, borderColor: color, borderRadius: 3, transform: [{ rotate: '45deg' }], alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: color }} />
+          </View>
+        </View>
+      );
+
+    case 'receipt':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          <View style={{ width: s * 0.7, height: s * 0.85, borderWidth: 1.8, borderColor: color, borderRadius: 2, padding: 2, justifyContent: 'space-around' }}>
+            <View style={{ height: 1.5, width: '80%', backgroundColor: color }} />
+            <View style={{ height: 1.5, width: '60%', backgroundColor: color }} />
+            <View style={{ height: 1.5, width: '70%', backgroundColor: color }} />
+          </View>
+        </View>
+      );
+
+    case 'wallet':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          <View style={{ width: s * 0.85, height: s * 0.65, borderWidth: 1.8, borderColor: color, borderRadius: 3, justifyContent: 'center', alignItems: 'flex-end', paddingRight: 2 }}>
+            <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: color }} />
+          </View>
+        </View>
+      );
+
+    case 'cash':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          <View style={{ width: s * 0.88, height: s * 0.58, borderWidth: 1.8, borderColor: color, borderRadius: 3, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 5, height: 5, borderRadius: 2.5, borderWidth: 1.5, borderColor: color }} />
           </View>
         </View>
       );

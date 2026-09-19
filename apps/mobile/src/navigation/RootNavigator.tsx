@@ -4,6 +4,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { theme } from '../theme';
 import { Icon } from '../components/common/Icon';
 import { useAuth } from '../context/AuthContext';
+import { useApp } from '../context/AppContext';
+import { PosNavigator } from './PosNavigator';
 
 // Screens
 import { LoginScreen } from '../screens/auth/LoginScreen';
@@ -16,6 +18,7 @@ import { StockAdjustmentScreen } from '../screens/stock/StockAdjustmentScreen';
 import { BarcodeScannerScreen } from '../screens/scanner/BarcodeScannerScreen';
 import { ReportsScreen } from '../screens/reports/ReportsScreen';
 import { ProfileScreen } from '../screens/settings/ProfileScreen';
+import { PosReceiptScreen } from '../screens/pos/PosReceiptScreen';
 
 const RootStack = createNativeStackNavigator();
 const AuthStack = createNativeStackNavigator();
@@ -117,6 +120,7 @@ function HomeTabs() {
 
 export function RootNavigator() {
   const { isAuthenticated } = useAuth();
+  const { activeAppId } = useApp();
 
   if (!isAuthenticated) {
     return (
@@ -128,7 +132,12 @@ export function RootNavigator() {
 
   return (
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
-      <RootStack.Screen name="Main" component={HomeTabs} />
+      {activeAppId === 'pos' ? (
+        <RootStack.Screen name="PosSuite" component={PosNavigator} />
+      ) : (
+        <RootStack.Screen name="InventorySuite" component={HomeTabs} />
+      )}
+      <RootStack.Screen name="PosReceipt" component={PosReceiptScreen} />
       <RootStack.Screen name="Scanner" component={BarcodeScannerScreen} />
       <RootStack.Screen name="NewProduct" component={NewProductScreen} />
       <RootStack.Screen name="ProductDetail" component={ProductDetailScreen} />

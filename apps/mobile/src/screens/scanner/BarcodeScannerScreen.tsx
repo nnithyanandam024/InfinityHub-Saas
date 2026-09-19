@@ -18,8 +18,9 @@ import { AppHeader } from '../../components/layout/AppHeader';
 import { useTenant } from '../../context/TenantContext';
 import { Product } from '@infinityhub/types';
 
-export const BarcodeScannerScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = ({ navigation, route }) => {
   const { products, formatPrice } = useTenant();
+  const onScan = route?.params?.onScan;
 
   const [barcodeInput, setBarcodeInput] = useState('');
   const [matchedProduct, setMatchedProduct] = useState<Product | null>(products[0] || null);
@@ -165,19 +166,34 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any }> = ({ navigation
             </View>
 
             <View style={styles.resultActions}>
-              <Button
-                label="Adjust Stock"
-                onPress={() => navigation.navigate('StockAdjustment', { product: matchedProduct })}
-                variant="primary"
-                icon="stock"
-                style={{ flex: 1 }}
-              />
-              <Button
-                label="Details"
-                onPress={() => navigation.navigate('ProductDetail', { product: matchedProduct })}
-                variant="outline"
-                style={{ width: 90 }}
-              />
+              {onScan ? (
+                <Button
+                  label="Add to Cart"
+                  onPress={() => {
+                    onScan(matchedProduct.barcode || matchedProduct.sku);
+                    navigation.goBack();
+                  }}
+                  variant="primary"
+                  icon="cart"
+                  style={{ flex: 1 }}
+                />
+              ) : (
+                <>
+                  <Button
+                    label="Adjust Stock"
+                    onPress={() => navigation.navigate('StockAdjustment', { product: matchedProduct })}
+                    variant="primary"
+                    icon="stock"
+                    style={{ flex: 1 }}
+                  />
+                  <Button
+                    label="Details"
+                    onPress={() => navigation.navigate('ProductDetail', { product: matchedProduct })}
+                    variant="outline"
+                    style={{ width: 90 }}
+                  />
+                </>
+              )}
             </View>
           </View>
         ) : (
