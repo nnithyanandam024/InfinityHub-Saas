@@ -1,4 +1,4 @@
-import { Tenant, User, Role, Product, Category, Supplier, Purchase, StockMovement, Plan, Module, TenantUsageMetadata, Brand, ProductVariant, ProductBundle, Warehouse, WarehouseLocation, StockBalance, StockTransfer, StockTransferItem, Batch, SerialNumber, SerialStatus, StocktakeSession, ReorderRule, PurchaseSuggestion, ForecastingReport } from '@infinityhub/types';
+import { Tenant, TenantMobileBranding, User, Role, Product, Category, Supplier, Purchase, StockMovement, Plan, Module, TenantUsageMetadata, Brand, ProductVariant, ProductBundle, Warehouse, WarehouseLocation, StockBalance, StockTransfer, StockTransferItem, Batch, SerialNumber, SerialStatus, StocktakeSession, ReorderRule, PurchaseSuggestion, ForecastingReport } from '@infinityhub/types';
 import { BulkImportRowData } from '@infinityhub/validation';
 import { INITIAL_TENANTS_MAP, MOCK_PLANS, MOCK_SUPER_ADMIN_USER, TenantData } from './initialData';
 import { PLATFORM_MODULES, ROLE_PERMISSIONS } from '@infinityhub/constants';
@@ -1267,6 +1267,86 @@ class MockDataStore {
     };
     this.persist();
     return t.tenant;
+  }
+
+  public getAppBranding(tenantId: string): TenantMobileBranding {
+    const t = this.data[tenantId];
+    if (!t) throw new Error(`Tenant ${tenantId} not found`);
+    if (!t.tenant.branding) {
+      t.tenant.branding = {
+        appName: t.tenant.name,
+        shortName: t.tenant.name.slice(0, 14),
+        logoUrl: t.tenant.logoUrl || '',
+        primaryColor: '#2563EB',
+        accentColor: '#1D4ED8',
+        appSuite: t.tenant.applicationId,
+        apkVersion: '1.0.0',
+        apkBuildNumber: 0,
+        apkStatus: 'not_generated',
+        buildLogs: []
+      };
+      this.persist();
+    }
+    return t.tenant.branding;
+  }
+
+  public updateAppBranding(tenantId: string, updates: Partial<TenantMobileBranding>): TenantMobileBranding {
+    const t = this.data[tenantId];
+    if (!t) throw new Error(`Tenant ${tenantId} not found`);
+    const existing = this.getAppBranding(tenantId);
+    t.tenant.branding = {
+      ...existing,
+      ...updates
+    };
+    this.persist();
+    return t.tenant.branding;
+  }
+
+  public buildApk(tenantId: string, options: Partial<TenantMobileBranding>): TenantMobileBranding {
+    const t = this.data[tenantId];
+    if (!t) throw new Error(`Tenant ${tenantId} not found`);
+    const existing = this.getAppBranding(tenantId);
+    const newBuildNumber = (existing.apkBuildNumber || 0) + 1;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString();
+
+    const appName = options.appName || existing.appName || t.tenant.name;
+    const shortName = options.shortName || existing.shortName || appName.slice(0, 14);
+    const primaryColor = options.primaryColor || existing.primaryColor || '#2563EB';
+    const appSuite = options.appSuite || existing.appSuite || t.tenant.applicationId;
+    const logoUrl = options.logoUrl !== undefined ? options.logoUrl : existing.logoUrl;
+
+    const buildLogs = [
+      `[${timeStr}] Initializing white-label build pipeline for ${t.tenant.name}...`,
+      `[${timeStr}] Workspace: ${tenantId} | App Suite: ${appSuite.toUpperCase()} | Build #${newBuildNumber}`,
+      `[${timeStr}] Branding Assets: Setting app title to "${appName}" (Launcher: "${shortName}")`,
+      `[${timeStr}] Palette Config: Primary Color ${primaryColor} | Splash Screen Branded`,
+      `[${timeStr}] Icon Pipeline: Processing company logo -> Adaptive launcher mipmaps (mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi)`,
+      `[${timeStr}] Manifest Patch: Injected android:label="@string/app_name" and store package identity`,
+      `[${timeStr}] Config Stamped: Packaged tenant_config.json into android/assets with local offline cache`,
+      `[${timeStr}] Compiling & Signing: Signed with release store keystore (Android Signature Scheme v2)`,
+      `[${timeStr}] Output Artifact: ${appName.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}-v1.0.0-b${newBuildNumber}.apk (112.6 MB)`,
+      `[${timeStr}] APK Published & Ready for Installation`
+    ];
+
+    t.tenant.branding = {
+      appName,
+      shortName,
+      logoUrl,
+      primaryColor,
+      accentColor: options.accentColor || existing.accentColor || '#1D4ED8',
+      appSuite,
+      apkVersion: '1.0.0',
+      apkBuildNumber: newBuildNumber,
+      apkStatus: 'ready',
+      apkDownloadUrl: `http://localhost:4000/api/v1/tenants/download-apk?tenantId=${tenantId}`,
+      apkFileSizeMb: 112.6,
+      lastBuiltAt: now.toISOString(),
+      buildLogs
+    };
+
+    this.persist();
+    return t.tenant.branding;
   }
 
   // ==========================================================

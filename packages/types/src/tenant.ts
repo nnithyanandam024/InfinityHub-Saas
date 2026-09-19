@@ -22,6 +22,22 @@ export interface TenantUsageMetadata {
   lastActiveAt: string;
 }
 
+export interface TenantMobileBranding {
+  appName: string;
+  shortName: string;
+  logoUrl?: string;
+  primaryColor: string;
+  accentColor?: string;
+  appSuite: ApplicationId;
+  apkVersion: string;
+  apkBuildNumber: number;
+  apkStatus: 'not_generated' | 'building' | 'ready' | 'failed';
+  apkDownloadUrl?: string;
+  apkFileSizeMb?: number;
+  lastBuiltAt?: string;
+  buildLogs?: string[];
+}
+
 export interface Tenant {
   id: string;
   name: string;
@@ -39,6 +55,7 @@ export interface Tenant {
   address?: string;
   activeModules?: string[];
   settings: TenantSettings;
+  branding?: TenantMobileBranding;
   usage?: TenantUsageMetadata;
   subscriptionExpiresAt?: string;
   createdAt: string;

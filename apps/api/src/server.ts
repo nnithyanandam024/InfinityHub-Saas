@@ -2,6 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ApkBuilderService } from './services/apkBuilderService.js';
 import type {
   Product,
   Category,
@@ -1912,6 +1913,108 @@ const server = http.createServer(async (req, res) => {
 
       persistData(tenantsState);
       return sendJson(res, 200, { customer: cust, transaction: tx });
+    }
+
+    // -------------------------------------------------------------
+    // White-Label Branded APK: GET /api/v1/tenants/app-branding?tenantId=...
+    // -------------------------------------------------------------
+    if (pathname === '/api/v1/tenants/app-branding' && req.method === 'GET') {
+      const tenantId = searchParams.get('tenantId') || 'tenant-abc-supermarket';
+      const store = tenantsState[tenantId] || Object.values(tenantsState)[0];
+      if (!store) return sendError(res, 404, 'Store workspace not found');
+
+      const branding = store.tenant.branding || ApkBuilderService.getDefaultBranding(store.tenant);
+      return sendJson(res, 200, branding);
+    }
+
+    // -------------------------------------------------------------
+    // Save App Branding: POST /api/v1/tenants/app-branding
+    // -------------------------------------------------------------
+    if (pathname === '/api/v1/tenants/app-branding' && req.method === 'POST') {
+      const body = await parseJsonBody<any>(req);
+      const tenantId = body.tenantId || 'tenant-abc-supermarket';
+      const store = tenantsState[tenantId];
+      if (!store) return sendError(res, 404, 'Store workspace not found');
+
+      const existing = store.tenant.branding || ApkBuilderService.getDefaultBranding(store.tenant);
+      const updatedBranding = {
+        ...existing,
+        appName: body.appName || existing.appName,
+        shortName: body.shortName || existing.shortName,
+        logoUrl: body.logoUrl !== undefined ? body.logoUrl : existing.logoUrl,
+        primaryColor: body.primaryColor || existing.primaryColor,
+        accentColor: body.accentColor || existing.accentColor,
+        appSuite: body.appSuite || existing.appSuite
+      };
+
+      store.tenant.branding = updatedBranding;
+      persistData(tenantsState);
+
+      return sendJson(res, 200, updatedBranding);
+    }
+
+    // -------------------------------------------------------------
+    // Generate / Re-generate Branded APK: POST /api/v1/tenants/build-apk
+    // -------------------------------------------------------------
+    if (pathname === '/api/v1/tenants/build-apk' && req.method === 'POST') {
+      const body = await parseJsonBody<any>(req);
+      const tenantId = body.tenantId || 'tenant-abc-supermarket';
+      const store = tenantsState[tenantId];
+      if (!store) return sendError(res, 404, 'Store workspace not found');
+
+      const updatedBranding = await ApkBuilderService.buildBrandedApk(store.tenant, body);
+      store.tenant.branding = updatedBranding;
+      persistData(tenantsState);
+
+      broadcastEvent({
+        type: 'tenant:apk_generated',
+        domain: 'tenant',
+        tenantId,
+        action: 'build_apk',
+        data: updatedBranding,
+        timestamp: new Date().toISOString()
+      });
+
+      return sendJson(res, 200, updatedBranding);
+    }
+
+    // -------------------------------------------------------------
+    // Download Branded APK: GET /api/v1/tenants/download-apk?tenantId=...
+    // -------------------------------------------------------------
+    if (pathname === '/api/v1/tenants/download-apk' && req.method === 'GET') {
+      const tenantId = searchParams.get('tenantId') || 'tenant-abc-supermarket';
+      const store = tenantsState[tenantId];
+      if (!store) return sendError(res, 404, 'Store workspace not found');
+
+      let apkPath = ApkBuilderService.getApkFilePath(tenantId);
+      if (!apkPath || !fs.existsSync(apkPath)) {
+        // Automatically compile on first download request if not present
+        const brand = await ApkBuilderService.buildBrandedApk(store.tenant, {});
+        store.tenant.branding = brand;
+        persistData(tenantsState);
+        apkPath = ApkBuilderService.getApkFilePath(tenantId);
+      }
+
+      if (!apkPath || !fs.existsSync(apkPath)) {
+        return sendError(res, 404, 'APK package not available');
+      }
+
+      const stat = fs.statSync(apkPath);
+      const safeStoreName = (store.tenant.branding?.appName || store.tenant.name)
+        .replace(/[^a-zA-Z0-9_-]/g, '_')
+        .toLowerCase();
+      const downloadFilename = `${safeStoreName}-release.apk`;
+
+      res.writeHead(200, {
+        'Content-Type': 'application/vnd.android.package-archive',
+        'Content-Length': stat.size,
+        'Content-Disposition': `attachment; filename="${downloadFilename}"`,
+        'Access-Control-Allow-Origin': '*'
+      });
+
+      const readStream = fs.createReadStream(apkPath);
+      readStream.pipe(res);
+      return;
     }
 
     // 404 Not Found

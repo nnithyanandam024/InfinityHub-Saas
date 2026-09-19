@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   Animated,
   Easing,
@@ -9,6 +10,7 @@ import {
 } from 'react-native';
 import { theme } from '../../theme';
 import { Icon } from '../common/Icon';
+import { useTenant } from '../../context/TenantContext';
 
 interface SplashScreenProps {
   onFinish?: () => void;
@@ -26,6 +28,10 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   onFinish,
   minDisplayMs = 1500
 }) => {
+  const { tenant } = useTenant();
+  const appName = tenant?.branding?.appName || tenant?.name || 'InfinityHub';
+  const brandColor = tenant?.branding?.primaryColor || '#2563EB';
+  const logoUrl = tenant?.branding?.logoUrl;
   const [statusIndex, setStatusIndex] = useState(0);
 
   // Animation values
@@ -177,6 +183,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           style={[
             styles.halo,
             {
+              backgroundColor: brandColor + '40',
               opacity: haloOpacity,
               transform: [{ scale: haloScale }]
             }
@@ -193,8 +200,16 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
             }
           ]}
         >
-          <View style={styles.emblemInner}>
-            <Icon name="package" size={32} color="#FFFFFF" />
+          <View style={[styles.emblemInner, { backgroundColor: brandColor }]}>
+            {logoUrl ? (
+              <Image
+                source={{ uri: logoUrl }}
+                style={{ width: 44, height: 44, borderRadius: 12 }}
+                resizeMode="contain"
+              />
+            ) : (
+              <Icon name="package" size={32} color="#FFFFFF" />
+            )}
           </View>
         </Animated.View>
 
@@ -208,7 +223,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
             }
           ]}
         >
-          <Text style={styles.brandTitle}>InfinityHub</Text>
+          <Text style={styles.brandTitle}>{appName}</Text>
           <Text style={styles.brandSubtitle}>Retail & Inventory Platform</Text>
 
           <View style={styles.clientBadge}>
@@ -229,7 +244,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         ]}
       >
         <View style={styles.trackContainer}>
-          <Animated.View style={[styles.trackFill, { width: progressWidth }]} />
+          <Animated.View style={[styles.trackFill, { width: progressWidth, backgroundColor: brandColor }]} />
         </View>
 
         <Text style={styles.statusText}>{STATUS_STEPS[statusIndex]}</Text>

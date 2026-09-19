@@ -39,6 +39,45 @@ export const tenantService = {
     password?: string;
   }): Promise<Tenant> {
     return mockStore.provisionTenant(payload);
+  },
+
+  // White-Label Mobile App Branding & APK Build
+  async getAppBranding(tenantId: string) {
+    try {
+      const res = await fetch(`http://localhost:4000/api/v1/tenants/app-branding?tenantId=${tenantId}`);
+      if (res.ok) return await res.json();
+    } catch {
+      // fallback to mockStore
+    }
+    return mockStore.getAppBranding(tenantId);
+  },
+
+  async updateAppBranding(tenantId: string, updates: any) {
+    try {
+      const res = await fetch('http://localhost:4000/api/v1/tenants/app-branding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId, ...updates })
+      });
+      if (res.ok) return await res.json();
+    } catch {
+      // fallback to mockStore
+    }
+    return mockStore.updateAppBranding(tenantId, updates);
+  },
+
+  async buildApk(tenantId: string, updates: any) {
+    try {
+      const res = await fetch('http://localhost:4000/api/v1/tenants/build-apk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId, ...updates })
+      });
+      if (res.ok) return await res.json();
+    } catch {
+      // fallback to mockStore
+    }
+    return mockStore.buildApk(tenantId, updates);
   }
 };
 
