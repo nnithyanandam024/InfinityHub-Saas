@@ -53,6 +53,7 @@ import { PosCustomersPage } from '../pages/pos/PosCustomersPage';
 
 // Tenant Restaurant Pages
 import { RestaurantTablesPage } from '../pages/restaurant/RestaurantTablesPage';
+import { RestaurantMenuPage } from '../pages/restaurant/RestaurantMenuPage';
 import { KitchenDisplayPage } from '../pages/restaurant/KitchenDisplayPage';
 import { RestaurantRecipesPage } from '../pages/restaurant/RestaurantRecipesPage';
 import { RestaurantAuditPage } from '../pages/restaurant/RestaurantAuditPage';
@@ -403,6 +404,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <RequireApplication appId="restaurant">
               <RestaurantTablesPage />
+            </RequireApplication>
+          }
+        />
+        <Route
+          path="/restaurant/menu"
+          element={
+            <RequireApplication appId="restaurant">
+              <RestaurantMenuPage />
             </RequireApplication>
           }
         />

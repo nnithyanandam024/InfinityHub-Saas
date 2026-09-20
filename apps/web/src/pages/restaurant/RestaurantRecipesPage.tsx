@@ -155,6 +155,24 @@ export const RestaurantRecipesPage: React.FC = () => {
     }
   };
 
+  // Delete recipe
+  const handleDeleteRecipe = async () => {
+    if (!selectedRecipe) return;
+    if (!window.confirm(`Are you sure you want to delete the recipe BOM for "${selectedRecipe.menuItemName}"?`)) {
+      return;
+    }
+    try {
+      await restaurantService.deleteRecipe(tenantId, selectedRecipe.id);
+      showToast(`Recipe for ${selectedRecipe.menuItemName} deleted successfully!`, 'info');
+      setSelectedRecipe(null);
+      await loadData();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to delete recipe', 'error');
+    }
+  };
+
+  const isExistingRecipe = recipes.some(r => r.id === selectedRecipe?.id);
+
   // Create new recipe template for an unmapped menu item
   const handleSelectMenuItem = (item: RestaurantMenuItem) => {
     const existing = recipes.find(r => r.menuItemId === item.id);
@@ -291,6 +309,18 @@ export const RestaurantRecipesPage: React.FC = () => {
                       {selectedRecipe.marginPercentage}%
                     </div>
                   </div>
+
+                  {isExistingRecipe && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteRecipe}
+                      className="px-3.5 py-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-xs shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer"
+                      title="Delete Recipe BOM"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span className="hidden sm:inline">Delete BOM</span>
+                    </button>
+                  )}
 
                   <button
                     type="button"

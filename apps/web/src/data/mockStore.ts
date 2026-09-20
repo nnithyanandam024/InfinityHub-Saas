@@ -39,7 +39,9 @@ import {
   UpdateRestaurantSectionPayload,
   CreateRestaurantTablePayload,
   UpdateRestaurantTablePayload,
-  BatchCreateTablesPayload
+  BatchCreateTablesPayload,
+  CreateRestaurantMenuItemPayload,
+  UpdateRestaurantMenuItemPayload
 } from '@infinityhub/types';
 import { BulkImportRowData } from '@infinityhub/validation';
 import { INITIAL_TENANTS_MAP, MOCK_PLANS, MOCK_SUPER_ADMIN_USER, TenantData } from './initialData';
@@ -2233,43 +2235,93 @@ class MockDataStore {
   // RESTAURANT MANAGEMENT DOMAIN (FOH, KDS, Anti-Theft & BOM)
   // ==========================================================
 
-  public getRestaurantSections(tenantId: string): RestaurantSection[] {
+  private ensureTenantRestaurantData(tenantId: string): TenantData {
     const tenant = this.getTenantData(tenantId);
+    let changed = false;
+
+    if (!tenant.restaurantSections || tenant.restaurantSections.length === 0) {
+      tenant.restaurantSections = [
+        { id: `sec-${tenantId}-1`, name: 'AC Dining Hall', description: 'Air-conditioned main dining area', sortOrder: 1 },
+        { id: `sec-${tenantId}-2`, name: 'Open-Air Terrace', description: 'Breezy outdoor seating', sortOrder: 2 },
+        { id: `sec-${tenantId}-3`, name: 'Express Counter', description: 'Quick service counter seating', sortOrder: 3 }
+      ];
+      changed = true;
+    }
+
+    if (!tenant.restaurantTables || tenant.restaurantTables.length === 0) {
+      tenant.restaurantTables = [
+        { id: `tbl-${tenantId}-1`, sectionId: tenant.restaurantSections[0].id, tableNumber: 'T-01', capacity: 2, status: 'vacant', shape: 'square', currentBillTotal: 0, activeKotIds: [] },
+        { id: `tbl-${tenantId}-2`, sectionId: tenant.restaurantSections[0].id, tableNumber: 'T-02', capacity: 4, status: 'vacant', shape: 'square', currentBillTotal: 0, activeKotIds: [] },
+        { id: `tbl-${tenantId}-3`, sectionId: tenant.restaurantSections[0].id, tableNumber: 'T-03', capacity: 4, status: 'vacant', shape: 'round', currentBillTotal: 0, activeKotIds: [] },
+        { id: `tbl-${tenantId}-4`, sectionId: tenant.restaurantSections[1].id, tableNumber: 'TR-01', capacity: 4, status: 'vacant', shape: 'round', currentBillTotal: 0, activeKotIds: [] },
+        { id: `tbl-${tenantId}-5`, sectionId: tenant.restaurantSections[1].id, tableNumber: 'TR-02', capacity: 6, status: 'vacant', shape: 'rectangle', currentBillTotal: 0, activeKotIds: [] },
+        { id: `tbl-${tenantId}-6`, sectionId: tenant.restaurantSections[2].id, tableNumber: 'C-01', capacity: 2, status: 'vacant', shape: 'square', currentBillTotal: 0, activeKotIds: [] }
+      ];
+      changed = true;
+    }
+
+    if (!tenant.restaurantMenuItems || tenant.restaurantMenuItems.length === 0) {
+      tenant.restaurantMenuItems = [
+        { id: `itm-${tenantId}-1`, name: 'Special Filter Coffee', code: 'SFC', categoryId: 'cat-bev', categoryName: 'Beverages', price: 40, taxRate: 5, prepTimeMinutes: 5, station: 'bar', dietary: 'veg', isAvailable: true },
+        { id: `itm-${tenantId}-2`, name: 'Masala Chai', code: 'MC', categoryId: 'cat-bev', categoryName: 'Beverages', price: 30, taxRate: 5, prepTimeMinutes: 5, station: 'bar', dietary: 'veg', isAvailable: true },
+        { id: `itm-${tenantId}-3`, name: 'Crispy Butter Masala Dosa', code: 'BMD', categoryId: 'cat-mains', categoryName: 'Mains', price: 120, taxRate: 5, prepTimeMinutes: 10, station: 'kitchen', dietary: 'veg', isAvailable: true },
+        { id: `itm-${tenantId}-4`, name: 'Paneer Butter Masala', code: 'PBM', categoryId: 'cat-curry', categoryName: 'Curries', price: 260, taxRate: 5, prepTimeMinutes: 15, station: 'kitchen', dietary: 'veg', isAvailable: true },
+        { id: `itm-${tenantId}-5`, name: 'Butter Garlic Naan', code: 'BGN', categoryId: 'cat-breads', categoryName: 'Breads', price: 65, taxRate: 5, prepTimeMinutes: 8, station: 'tandoor', dietary: 'veg', isAvailable: true },
+        { id: `itm-${tenantId}-6`, name: 'Dum Chicken Biryani', code: 'DCB', categoryId: 'cat-biryani', categoryName: 'Biryani & Rice', price: 320, taxRate: 5, prepTimeMinutes: 18, station: 'kitchen', dietary: 'non_veg', isAvailable: true },
+        { id: `itm-${tenantId}-7`, name: 'Gulab Jamun with Rabdi', code: 'GJR', categoryId: 'cat-dessert', categoryName: 'Desserts', price: 110, taxRate: 5, prepTimeMinutes: 5, station: 'dessert', dietary: 'veg', isAvailable: true }
+      ];
+      changed = true;
+    }
+
+    if (!tenant.restaurantOrders) { tenant.restaurantOrders = []; changed = true; }
+    if (!tenant.restaurantKots) { tenant.restaurantKots = []; changed = true; }
+    if (!tenant.restaurantRecipes) { tenant.restaurantRecipes = []; changed = true; }
+    if (!tenant.restaurantWasteLogs) { tenant.restaurantWasteLogs = []; changed = true; }
+    if (!tenant.restaurantTableAudits) { tenant.restaurantTableAudits = []; changed = true; }
+
+    if (changed) {
+      this.persist();
+    }
+    return tenant;
+  }
+
+  public getRestaurantSections(tenantId: string): RestaurantSection[] {
+    const tenant = this.ensureTenantRestaurantData(tenantId);
     return tenant.restaurantSections || [];
   }
 
   public getRestaurantTables(tenantId: string): RestaurantTable[] {
-    const tenant = this.getTenantData(tenantId);
+    const tenant = this.ensureTenantRestaurantData(tenantId);
     return tenant.restaurantTables || [];
   }
 
   public getRestaurantMenuItems(tenantId: string): RestaurantMenuItem[] {
-    const tenant = this.getTenantData(tenantId);
+    const tenant = this.ensureTenantRestaurantData(tenantId);
     return tenant.restaurantMenuItems || [];
   }
 
   public getRestaurantKots(tenantId: string): RestaurantKot[] {
-    const tenant = this.getTenantData(tenantId);
+    const tenant = this.ensureTenantRestaurantData(tenantId);
     return tenant.restaurantKots || [];
   }
 
   public getRestaurantOrders(tenantId: string): RestaurantOrder[] {
-    const tenant = this.getTenantData(tenantId);
+    const tenant = this.ensureTenantRestaurantData(tenantId);
     return tenant.restaurantOrders || [];
   }
 
   public getRestaurantRecipes(tenantId: string): RestaurantRecipe[] {
-    const tenant = this.getTenantData(tenantId);
+    const tenant = this.ensureTenantRestaurantData(tenantId);
     return tenant.restaurantRecipes || [];
   }
 
   public getRestaurantWasteLogs(tenantId: string): RestaurantWasteLog[] {
-    const tenant = this.getTenantData(tenantId);
+    const tenant = this.ensureTenantRestaurantData(tenantId);
     return tenant.restaurantWasteLogs || [];
   }
 
   public getTableAudits(tenantId: string): TableTransferAudit[] {
-    const tenant = this.getTenantData(tenantId);
+    const tenant = this.ensureTenantRestaurantData(tenantId);
     return tenant.restaurantTableAudits || [];
   }
 
@@ -2979,6 +3031,121 @@ class MockDataStore {
 
     this.persist();
     return created;
+  }
+
+  // ==========================================================
+  // MENU ITEMS & DISHES CATALOG (CRUD & Availability)
+  // ==========================================================
+
+  public createRestaurantMenuItem(
+    tenantId: string,
+    payload: CreateRestaurantMenuItemPayload
+  ): RestaurantMenuItem {
+    const tenant = this.ensureTenantRestaurantData(tenantId);
+
+    const code = (payload.code || payload.name.slice(0, 3)).trim().toUpperCase();
+    const existing = tenant.restaurantMenuItems?.find(
+      (m: RestaurantMenuItem) => m.code.toUpperCase() === code
+    );
+    if (existing) {
+      throw new Error(`Item code "${code}" is already in use by "${existing.name}".`);
+    }
+
+    const newItem: RestaurantMenuItem = {
+      id: `itm-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name: payload.name.trim(),
+      code,
+      categoryId: payload.categoryId || 'cat-general',
+      categoryName: payload.categoryName?.trim() || 'General',
+      price: Math.max(0, payload.price),
+      taxRate: payload.taxRate ?? 5,
+      prepTimeMinutes: payload.prepTimeMinutes || 10,
+      station: payload.station || 'kitchen',
+      dietary: payload.dietary || 'veg',
+      description: payload.description?.trim() || '',
+      isAvailable: payload.isAvailable ?? true,
+      modifierGroups: payload.modifierGroups || []
+    };
+
+    if (!tenant.restaurantMenuItems) tenant.restaurantMenuItems = [];
+    tenant.restaurantMenuItems.push(newItem);
+    this.persist();
+    return newItem;
+  }
+
+  public updateRestaurantMenuItem(
+    tenantId: string,
+    itemId: string,
+    payload: UpdateRestaurantMenuItemPayload
+  ): RestaurantMenuItem {
+    const tenant = this.ensureTenantRestaurantData(tenantId);
+    const item = tenant.restaurantMenuItems?.find((m: RestaurantMenuItem) => m.id === itemId);
+    if (!item) throw new Error('Menu item not found');
+
+    if (payload.code !== undefined) {
+      const code = payload.code.trim().toUpperCase();
+      const duplicate = tenant.restaurantMenuItems?.find(
+        (m: RestaurantMenuItem) => m.id !== itemId && m.code.toUpperCase() === code
+      );
+      if (duplicate) {
+        throw new Error(`Item code "${code}" is already in use by "${duplicate.name}".`);
+      }
+      item.code = code;
+    }
+
+    if (payload.name !== undefined) item.name = payload.name.trim();
+    if (payload.categoryId !== undefined) item.categoryId = payload.categoryId;
+    if (payload.categoryName !== undefined) item.categoryName = payload.categoryName.trim();
+    if (payload.price !== undefined) item.price = Math.max(0, payload.price);
+    if (payload.taxRate !== undefined) item.taxRate = payload.taxRate;
+    if (payload.prepTimeMinutes !== undefined) item.prepTimeMinutes = payload.prepTimeMinutes;
+    if (payload.station !== undefined) item.station = payload.station;
+    if (payload.dietary !== undefined) item.dietary = payload.dietary;
+    if (payload.description !== undefined) item.description = payload.description.trim();
+    if (payload.isAvailable !== undefined) item.isAvailable = payload.isAvailable;
+    if (payload.modifierGroups !== undefined) item.modifierGroups = payload.modifierGroups;
+
+    this.persist();
+    return item;
+  }
+
+  public deleteRestaurantMenuItem(tenantId: string, itemId: string): void {
+    const tenant = this.ensureTenantRestaurantData(tenantId);
+    const item = tenant.restaurantMenuItems?.find((m: RestaurantMenuItem) => m.id === itemId);
+    if (!item) throw new Error('Menu item not found');
+
+    // Safety guard: check if item is in any open or unbilled order
+    const openOrders = tenant.restaurantOrders?.filter(o => o.orderStatus === 'open' || o.orderStatus === 'billed') || [];
+    for (const order of openOrders) {
+      for (const kot of order.kots) {
+        if (kot.items.some(i => i.menuItemId === itemId && i.status !== 'cancelled')) {
+          throw new Error(`Cannot delete "${item.name}" because it is currently ordered in active Order #${order.orderNumber}. Please settle or void the order first.`);
+        }
+      }
+    }
+
+    tenant.restaurantMenuItems = tenant.restaurantMenuItems?.filter((m: RestaurantMenuItem) => m.id !== itemId);
+    // Also remove any linked recipe
+    if (tenant.restaurantRecipes) {
+      tenant.restaurantRecipes = tenant.restaurantRecipes.filter(r => r.menuItemId !== itemId);
+    }
+    this.persist();
+  }
+
+  public toggleMenuItemAvailability(tenantId: string, itemId: string): RestaurantMenuItem {
+    const tenant = this.ensureTenantRestaurantData(tenantId);
+    const item = tenant.restaurantMenuItems?.find((m: RestaurantMenuItem) => m.id === itemId);
+    if (!item) throw new Error('Menu item not found');
+    item.isAvailable = !item.isAvailable;
+    this.persist();
+    return item;
+  }
+
+  public deleteRestaurantRecipe(tenantId: string, recipeId: string): void {
+    const tenant = this.ensureTenantRestaurantData(tenantId);
+    if (!tenant.restaurantRecipes) tenant.restaurantRecipes = [];
+    tenant.restaurantRecipes = tenant.restaurantRecipes.filter(r => r.id !== recipeId);
+    this.persist();
   }
 }
 

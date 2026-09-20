@@ -227,3 +227,33 @@ export interface BatchCreateTablesPayload {
   shape: 'square' | 'round' | 'rectangle';
   assignedCaptain?: string;
 }
+
+export interface CreateRestaurantMenuItemPayload {
+  name: string;
+  code: string;
+  categoryId: string;
+  categoryName: string;
+  price: number;
+  taxRate?: number;
+  prepTimeMinutes?: number;
+  station?: KitchenStation;
+  dietary?: DietaryType;
+  description?: string;
+  isAvailable?: boolean;
+  modifierGroups?: RestaurantModifierGroup[];
+}
+
+export interface UpdateRestaurantMenuItemPayload {
+  name?: string;
+  code?: string;
+  categoryId?: string;
+  categoryName?: string;
+  price?: number;
+  taxRate?: number;
+  prepTimeMinutes?: number;
+  station?: KitchenStation;
+  dietary?: DietaryType;
+  description?: string;
+  isAvailable?: boolean;
+  modifierGroups?: RestaurantModifierGroup[];
+}

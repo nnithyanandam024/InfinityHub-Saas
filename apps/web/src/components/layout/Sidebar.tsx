@@ -29,6 +29,7 @@ import {
   Banknote,
   Users,
   UtensilsCrossed,
+  Utensils,
   ChefHat,
   CookingPot,
   ShieldAlert,
@@ -131,6 +132,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 >
                   <UtensilsCrossed className="w-4 h-4 shrink-0 text-orange-600" />
                   <span className="flex-1">Floor Plan & Tables</span>
+                </NavLink>
+
+                <NavLink
+                  to="/restaurant/menu"
+                  onClick={onClose}
+                  className={({ isActive }) => getNavLinkClass(isActive)}
+                >
+                  <Utensils className="w-4 h-4 shrink-0 text-blue-600" />
+                  <span className="flex-1">Digital Menu & Dishes</span>
                 </NavLink>
 
                 {hasFeature('restaurant_kds') && (
