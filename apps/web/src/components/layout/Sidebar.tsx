@@ -119,9 +119,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           {/* SECTION 1A: RESTAURANT OPERATIONS (When Restaurant app is active) */}
           {isRestaurantApp && (
             <div>
-              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-orange-600 flex items-center justify-between">
-                <span>Restaurant Ops</span>
-                <span className="text-[9px] bg-orange-100 text-orange-800 px-1 rounded font-bold">FOH</span>
+              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Restaurant Ops
               </div>
               <nav className="space-y-1">
                 <NavLink
