@@ -162,15 +162,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 </NavLink>
 
                 <NavLink
-                  to="/restaurant/floor-settings"
-                  onClick={onClose}
-                  className={({ isActive }) => getNavLinkClass(isActive)}
-                >
-                  <SlidersHorizontal className="w-4 h-4 shrink-0 text-indigo-600" />
-                  <span>Floor & Table Config</span>
-                </NavLink>
-
-                <NavLink
                   to="/pos/shifts"
                   onClick={onClose}
                   className={({ isActive }) => getNavLinkClass(isActive)}
