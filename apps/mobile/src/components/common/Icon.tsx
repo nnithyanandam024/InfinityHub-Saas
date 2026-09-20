@@ -27,7 +27,12 @@ export type IconName =
   | 'tag'
   | 'receipt'
   | 'wallet'
-  | 'cash';
+  | 'cash'
+  | 'utensils'
+  | 'table'
+  | 'chefHat'
+  | 'fire'
+  | 'dish';
 
 interface IconProps {
   name: IconName;
@@ -391,6 +396,73 @@ export const Icon: React.FC<IconProps> = ({
           <View style={{ width: s * 0.88, height: s * 0.58, borderWidth: 1.8, borderColor: color, borderRadius: 3, alignItems: 'center', justifyContent: 'center' }}>
             <View style={{ width: 5, height: 5, borderRadius: 2.5, borderWidth: 1.5, borderColor: color }} />
           </View>
+        </View>
+      );
+
+    case 'utensils':
+      return (
+        <View style={[{ width: s, height: s, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: s * 0.18 }, style]}>
+          {/* Fork */}
+          <View style={{ width: s * 0.28, height: s * 0.85, alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between', height: s * 0.38 }}>
+              <View style={{ width: 1.8, height: '100%', backgroundColor: color }} />
+              <View style={{ width: 1.8, height: '100%', backgroundColor: color }} />
+              <View style={{ width: 1.8, height: '100%', backgroundColor: color }} />
+            </View>
+            <View style={{ width: '100%', height: 1.8, backgroundColor: color }} />
+            <View style={{ width: 2, flex: 1, backgroundColor: color }} />
+          </View>
+          {/* Knife */}
+          <View style={{ width: s * 0.22, height: s * 0.85, alignItems: 'center' }}>
+            <View style={{ width: s * 0.22, height: s * 0.42, backgroundColor: color, borderTopRightRadius: s * 0.18, borderTopLeftRadius: 1 }} />
+            <View style={{ width: 2, flex: 1, backgroundColor: color }} />
+          </View>
+        </View>
+      );
+
+    case 'table':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          {/* Table Top Surface */}
+          <View style={{ width: s * 0.86, height: 2.5, backgroundColor: color, borderRadius: 1 }} />
+          {/* Table Legs */}
+          <View style={{ flexDirection: 'row', width: s * 0.72, justifyContent: 'space-between', height: s * 0.55 }}>
+            <View style={{ width: 2, height: '100%', backgroundColor: color }} />
+            <View style={{ width: 2, height: '100%', backgroundColor: color }} />
+          </View>
+        </View>
+      );
+
+    case 'chefHat':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          {/* Puffed Hat Top */}
+          <View style={{ flexDirection: 'row', width: s * 0.76, justifyContent: 'space-between', alignItems: 'flex-end', height: s * 0.45 }}>
+            <View style={{ width: s * 0.26, height: s * 0.38, borderRadius: s * 0.13, backgroundColor: color }} />
+            <View style={{ width: s * 0.32, height: s * 0.45, borderRadius: s * 0.16, backgroundColor: color }} />
+            <View style={{ width: s * 0.26, height: s * 0.38, borderRadius: s * 0.13, backgroundColor: color }} />
+          </View>
+          {/* Base Brim */}
+          <View style={{ width: s * 0.68, height: s * 0.28, borderWidth: 1.8, borderColor: color, borderTopWidth: 0, borderBottomLeftRadius: 2, borderBottomRightRadius: 2, backgroundColor: 'transparent' }} />
+        </View>
+      );
+
+    case 'fire':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          <View style={{ width: s * 0.65, height: s * 0.8, borderRadius: s * 0.32, borderTopLeftRadius: 1, backgroundColor: color, transform: [{ rotate: '45deg' }] }} />
+        </View>
+      );
+
+    case 'dish':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          {/* Cloche Knob */}
+          <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: color, marginBottom: 1 }} />
+          {/* Cloche Dome */}
+          <View style={{ width: s * 0.76, height: s * 0.38, borderTopLeftRadius: s * 0.38, borderTopRightRadius: s * 0.38, borderWidth: 1.8, borderColor: color, borderBottomWidth: 0 }} />
+          {/* Cloche Plate Base */}
+          <View style={{ width: s * 0.88, height: 2, backgroundColor: color, borderRadius: 1 }} />
         </View>
       );
 

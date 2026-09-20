@@ -6,6 +6,7 @@ import { Icon } from '../components/common/Icon';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { PosNavigator } from './PosNavigator';
+import { RestaurantNavigator } from './RestaurantNavigator';
 
 // Screens
 import { LoginScreen } from '../screens/auth/LoginScreen';
@@ -19,6 +20,7 @@ import { BarcodeScannerScreen } from '../screens/scanner/BarcodeScannerScreen';
 import { ReportsScreen } from '../screens/reports/ReportsScreen';
 import { ProfileScreen } from '../screens/settings/ProfileScreen';
 import { PosReceiptScreen } from '../screens/pos/PosReceiptScreen';
+import { RestaurantReceiptScreen } from '../screens/restaurant/RestaurantReceiptScreen';
 
 const RootStack = createNativeStackNavigator();
 const AuthStack = createNativeStackNavigator();
@@ -134,10 +136,13 @@ export function RootNavigator() {
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
       {activeAppId === 'pos' ? (
         <RootStack.Screen name="PosSuite" component={PosNavigator} />
+      ) : activeAppId === 'restaurant' ? (
+        <RootStack.Screen name="RestaurantSuite" component={RestaurantNavigator} />
       ) : (
         <RootStack.Screen name="InventorySuite" component={HomeTabs} />
       )}
       <RootStack.Screen name="PosReceipt" component={PosReceiptScreen} />
+      <RootStack.Screen name="RestaurantReceipt" component={RestaurantReceiptScreen} />
       <RootStack.Screen name="Scanner" component={BarcodeScannerScreen} />
       <RootStack.Screen name="NewProduct" component={NewProductScreen} />
       <RootStack.Screen name="ProductDetail" component={ProductDetailScreen} />

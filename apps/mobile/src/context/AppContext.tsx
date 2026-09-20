@@ -2,14 +2,14 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { Alert } from 'react-native';
 import { useTenant } from './TenantContext';
 
-export type AppId = 'inventory' | 'pos' | 'app_catalog' | 'platform_admin';
+export type AppId = 'inventory' | 'pos' | 'restaurant' | 'app_catalog' | 'platform_admin';
 
 export interface SuiteApp {
   id: AppId;
   name: string;
   tagline: string;
   status: 'active' | 'ready' | 'preview' | 'locked';
-  icon: 'package' | 'cart' | 'store' | 'shield';
+  icon: 'package' | 'cart' | 'store' | 'shield' | 'utensils';
   description: string;
   isLicensed?: boolean;
 }
@@ -34,6 +34,15 @@ export const SUITE_APPS: SuiteApp[] = [
     isLicensed: true
   },
   {
+    id: 'restaurant',
+    name: 'Restaurant Ops',
+    tagline: 'Table management, Captain Pad & KDS',
+    status: 'ready',
+    icon: 'utensils',
+    description: 'Visual floor plan, handheld captain order pad, kitchen line display, and table settlement.',
+    isLicensed: true
+  },
+  {
     id: 'app_catalog',
     name: 'App Marketplace',
     tagline: 'Explore business suites',
@@ -50,6 +59,7 @@ interface AppContextType {
   switchApp: (appId: AppId) => void;
   availableApps: SuiteApp[];
   isPosLicensed: boolean;
+  isRestaurantLicensed: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -57,15 +67,19 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { tenant } = useTenant();
   const isPosLicensed = tenant?.applicationId === 'pos';
+  const isRestaurantLicensed = tenant?.applicationId === 'restaurant';
 
-  const [activeAppId, setActiveAppId] = useState<AppId>(() => (isPosLicensed ? 'pos' : 'inventory'));
+  const [activeAppId, setActiveAppId] = useState<AppId>(() => (
+    isRestaurantLicensed ? 'restaurant' : isPosLicensed ? 'pos' : 'inventory'
+  ));
 
   useEffect(() => {
-    // If current store is not licensed for POS, fallback safely to inventory
-    if (!isPosLicensed && activeAppId === 'pos') {
-      setActiveAppId('inventory');
+    if (tenant?.applicationId === 'restaurant' && activeAppId !== 'restaurant') {
+      setActiveAppId('restaurant');
+    } else if (tenant?.applicationId === 'pos' && activeAppId === 'inventory') {
+      setActiveAppId('pos');
     }
-  }, [isPosLicensed, activeAppId]);
+  }, [tenant?.applicationId]);
 
   const switchApp = (appId: AppId) => {
     if (appId === 'pos' && !isPosLicensed) {
@@ -100,6 +114,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isLicensed: isPosLicensed
     },
     {
+      id: 'restaurant',
+      name: 'Restaurant Ops',
+      tagline: isRestaurantLicensed ? 'Table management, Captain Pad & KDS' : 'Requires Restaurant Subscription',
+      status: isRestaurantLicensed ? (activeAppId === 'restaurant' ? 'active' : 'ready') : 'locked',
+      icon: 'utensils',
+      description: isRestaurantLicensed
+        ? 'Visual floor plan, handheld captain order pad, kitchen line display, and table settlement.'
+        : 'Restaurant management is not enabled for this workspace.',
+      isLicensed: isRestaurantLicensed
+    },
+    {
       id: 'app_catalog',
       name: 'App Marketplace',
       tagline: 'Explore business suites',
@@ -108,7 +133,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       description: 'Discover Restaurant Management, HR/Payroll, and Appointment booking modules.',
       isLicensed: false
     }
-  ], [isPosLicensed, activeAppId]);
+  ], [isPosLicensed, isRestaurantLicensed, activeAppId]);
 
   const activeApp = availableApps.find(a => a.id === activeAppId) || availableApps[0];
 
@@ -119,7 +144,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeApp,
         switchApp,
         availableApps,
-        isPosLicensed
+        isPosLicensed,
+        isRestaurantLicensed
       }}
     >
       {children}
