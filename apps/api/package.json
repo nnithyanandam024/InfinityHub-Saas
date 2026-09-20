@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --experimental-strip-types src/server.ts",
-    "start": "node --experimental-strip-types src/server.ts",
+    "dev": "tsx src/server.ts",
+    "start": "tsx src/server.ts",
     "build": "tsc"
   },
   "dependencies": {

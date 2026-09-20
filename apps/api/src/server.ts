@@ -1241,6 +1241,7 @@ const server = http.createServer(async (req, res) => {
       const actualCashCounted = Number(body.actualCashCounted) || 0;
       shift.status = 'closed';
       shift.endTime = new Date().toISOString();
+      (shift as any).closedAt = shift.endTime;
       shift.actualCashCounted = actualCashCounted;
       shift.cashVariance = actualCashCounted - shift.expectedCashInDrawer;
       shift.closedBy = body.closedBy || shift.cashierName;
@@ -1751,6 +1752,7 @@ const server = http.createServer(async (req, res) => {
         return sendError(res, 403, 'Invalid Manager Security PIN');
       }
 
+      (inv as any).status = 'voided';
       const order = store.posOrders?.find(o => o.id === inv.orderId || o.invoiceNumber === inv.invoiceNumber);
       if (order) {
         order.orderStatus = 'voided';
