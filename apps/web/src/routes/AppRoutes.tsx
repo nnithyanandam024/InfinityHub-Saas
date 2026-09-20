@@ -51,9 +51,14 @@ import { PosInvoicesPage } from '../pages/pos/PosInvoicesPage';
 import { PosShiftsPage } from '../pages/pos/PosShiftsPage';
 import { PosCustomersPage } from '../pages/pos/PosCustomersPage';
 
+// Tenant Restaurant Pages
+import { RestaurantTablesPage } from '../pages/restaurant/RestaurantTablesPage';
+import { KitchenDisplayPage } from '../pages/restaurant/KitchenDisplayPage';
+import { RestaurantRecipesPage } from '../pages/restaurant/RestaurantRecipesPage';
+import { RestaurantAuditPage } from '../pages/restaurant/RestaurantAuditPage';
+
 // Placeholder Workspaces for Other Standalone Products
 import { PosWorkspacePlaceholder } from '../pages/placeholders/PosWorkspacePlaceholder';
-import { RestaurantWorkspacePlaceholder } from '../pages/placeholders/RestaurantWorkspacePlaceholder';
 
 // Admin Pages
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
@@ -375,12 +380,52 @@ export const AppRoutes: React.FC = () => {
           }
         />
 
-        {/* Standalone Restaurant Management Workspace Route */}
+        {/* Standalone Restaurant Management Workspace Routes */}
+        <Route
+          path="/restaurant"
+          element={
+            <RequireApplication appId="restaurant">
+              <Navigate to="/restaurant/tables" replace />
+            </RequireApplication>
+          }
+        />
         <Route
           path="/restaurant/dashboard"
           element={
             <RequireApplication appId="restaurant">
-              <RestaurantWorkspacePlaceholder />
+              <Navigate to="/restaurant/tables" replace />
+            </RequireApplication>
+          }
+        />
+        <Route
+          path="/restaurant/tables"
+          element={
+            <RequireApplication appId="restaurant">
+              <RestaurantTablesPage />
+            </RequireApplication>
+          }
+        />
+        <Route
+          path="/restaurant/kds"
+          element={
+            <RequireApplication appId="restaurant">
+              <KitchenDisplayPage />
+            </RequireApplication>
+          }
+        />
+        <Route
+          path="/restaurant/recipes"
+          element={
+            <RequireApplication appId="restaurant">
+              <RestaurantRecipesPage />
+            </RequireApplication>
+          }
+        />
+        <Route
+          path="/restaurant/audit"
+          element={
+            <RequireApplication appId="restaurant">
+              <RestaurantAuditPage />
             </RequireApplication>
           }
         />

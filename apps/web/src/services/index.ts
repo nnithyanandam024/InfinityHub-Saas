@@ -18,3 +18,5 @@ export * from './stocktakeService';
 export * from './reorderService';
 export * from './forecastingService';
 export * from './bulkImportService';
+export * from './posService';
+export * from './restaurantService';

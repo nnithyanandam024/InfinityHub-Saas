@@ -1,4 +1,33 @@
-import { Tenant, User, Product, Category, Supplier, Purchase, StockMovement, Plan, Module, Brand, ProductVariant, ProductBundle, Warehouse, WarehouseLocation, StockBalance, StockTransfer, Batch, SerialNumber, StocktakeSession, ReorderRule } from '@infinityhub/types';
+import {
+  Tenant,
+  User,
+  Product,
+  Category,
+  Supplier,
+  Purchase,
+  StockMovement,
+  Plan,
+  Module,
+  Brand,
+  ProductVariant,
+  ProductBundle,
+  Warehouse,
+  WarehouseLocation,
+  StockBalance,
+  StockTransfer,
+  Batch,
+  SerialNumber,
+  StocktakeSession,
+  ReorderRule,
+  RestaurantSection,
+  RestaurantTable,
+  RestaurantMenuItem,
+  RestaurantOrder,
+  RestaurantKot,
+  RestaurantRecipe,
+  RestaurantWasteLog,
+  TableTransferAudit
+} from '@infinityhub/types';
 import { PLATFORM_MODULES, ROLE_PERMISSIONS, SUBSCRIPTION_PLANS } from '@infinityhub/constants';
 
 export interface TenantData {
@@ -20,6 +49,15 @@ export interface TenantData {
   serialNumbers?: SerialNumber[];
   stocktakeSessions?: StocktakeSession[];
   reorderRules?: ReorderRule[];
+  // Restaurant Domain Entities
+  restaurantSections?: RestaurantSection[];
+  restaurantTables?: RestaurantTable[];
+  restaurantMenuItems?: RestaurantMenuItem[];
+  restaurantOrders?: RestaurantOrder[];
+  restaurantKots?: RestaurantKot[];
+  restaurantRecipes?: RestaurantRecipe[];
+  restaurantWasteLogs?: RestaurantWasteLog[];
+  restaurantTableAudits?: TableTransferAudit[];
 }
 
 export const MOCK_PLANS: Plan[] = SUBSCRIPTION_PLANS;
@@ -941,11 +979,366 @@ export const XYZ_RESTAURANT_DATA: TenantData = {
       createdAt: '2026-04-01T08:00:00Z'
     }
   ],
-  categories: [],
-  suppliers: [],
-  products: [],
+  categories: [
+    { id: 'cat-rst-starters', tenantId: 'tenant-xyz-restaurant', name: 'Tandoor & Starters', description: 'Clay oven kebabs, tikkas and appetizers', productCount: 2, status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'cat-rst-mains', tenantId: 'tenant-xyz-restaurant', name: 'Biryani & Curries', description: 'Royal dum biryanis and slow-cooked gravies', productCount: 3, status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'cat-rst-breads', tenantId: 'tenant-xyz-restaurant', name: 'Artisanal Breads', description: 'Fresh naan, kulcha, and tandoori roti', productCount: 2, status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'cat-rst-drinks', tenantId: 'tenant-xyz-restaurant', name: 'Beverages & Mocktails', description: 'House sodas, chilled coolers and fresh fruit mojitos', productCount: 2, status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'cat-rst-dessert', tenantId: 'tenant-xyz-restaurant', name: 'Signature Desserts', description: 'Artisanal kulfi, saffron kheer, and halwa', productCount: 1, status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' }
+  ],
+  suppliers: [
+    { id: 'sup-rst-1', tenantId: 'tenant-xyz-restaurant', name: 'Ramanathan', companyName: 'Bangalore Fresh Dairy & Farms', phone: '+91 98450 11223', email: 'orders@bengalurudairy.com', address: 'Plot 4, Dairy Circle, Bengaluru', taxNumber: '29AABCB1234A1Z1', status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'sup-rst-2', tenantId: 'tenant-xyz-restaurant', name: 'Karthik Reddy', companyName: 'Deccan Agro & Poultry', phone: '+91 98455 44332', email: 'supply@deccanagro.in', address: '22 Poultry Market, Hosur Road, Bengaluru', taxNumber: '29AABCD5566B1Z2', status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'sup-rst-3', tenantId: 'tenant-xyz-restaurant', name: 'Syed Ibrahim', companyName: 'Malabar Heritage Spices', phone: '+91 98459 77889', email: 'spices@malabartraders.com', address: '18 Commercial Street, Bengaluru', taxNumber: '29AABCM9988C1Z3', status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' }
+  ],
+  products: [
+    { id: 'rm-paneer', tenantId: 'tenant-xyz-restaurant', name: 'Fresh Malai Paneer (Raw)', sku: 'RAW-PAN-01', barcode: '890123450001', categoryId: 'cat-rst-mains', categoryName: 'Dairy Raw', costPrice: 320, sellingPrice: 0, stockQuantity: 15, minimumStock: 5, unit: 'kg', status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'rm-chicken', tenantId: 'tenant-xyz-restaurant', name: 'Farm Fresh Chicken (Raw)', sku: 'RAW-CHK-01', barcode: '890123450002', categoryId: 'cat-rst-mains', categoryName: 'Meat Raw', costPrice: 240, sellingPrice: 0, stockQuantity: 30, minimumStock: 8, unit: 'kg', status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'rm-rice', tenantId: 'tenant-xyz-restaurant', name: 'Aged Dum Basmati Rice (Raw)', sku: 'RAW-RIC-01', barcode: '890123450003', categoryId: 'cat-rst-mains', categoryName: 'Staples Raw', costPrice: 110, sellingPrice: 0, stockQuantity: 100, minimumStock: 20, unit: 'kg', status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'rm-butter', tenantId: 'tenant-xyz-restaurant', name: 'Pure Cow Butter (Raw)', sku: 'RAW-BUT-01', barcode: '890123450004', categoryId: 'cat-rst-mains', categoryName: 'Dairy Raw', costPrice: 520, sellingPrice: 0, stockQuantity: 12, minimumStock: 4, unit: 'kg', status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'rm-cream', tenantId: 'tenant-xyz-restaurant', name: 'Fresh Dairy Cooking Cream (Raw)', sku: 'RAW-CRM-01', barcode: '890123450005', categoryId: 'cat-rst-mains', categoryName: 'Dairy Raw', costPrice: 210, sellingPrice: 0, stockQuantity: 10, minimumStock: 3, unit: 'l', status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'rm-spices', tenantId: 'tenant-xyz-restaurant', name: 'Shahi Biryani Spice Blend (Raw)', sku: 'RAW-SPC-01', barcode: '890123450006', categoryId: 'cat-rst-mains', categoryName: 'Spices Raw', costPrice: 1200, sellingPrice: 0, stockQuantity: 6, minimumStock: 2, unit: 'kg', status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' },
+    { id: 'rm-atta', tenantId: 'tenant-xyz-restaurant', name: 'Chakki Whole Wheat Atta (Raw)', sku: 'RAW-ATT-01', barcode: '890123450007', categoryId: 'cat-rst-breads', categoryName: 'Staples Raw', costPrice: 45, sellingPrice: 0, stockQuantity: 60, minimumStock: 15, unit: 'kg', status: 'active', createdAt: '2026-04-01T08:00:00Z', updatedAt: '2026-04-01T08:00:00Z' }
+  ],
   purchases: [],
-  stockMovements: []
+  stockMovements: [],
+
+  // Dining Sections
+  restaurantSections: [
+    { id: 'sec-gf', name: 'Ground Floor AC Dining', description: 'Main central dining hall with banquet booths', sortOrder: 1 },
+    { id: 'sec-terrace', name: 'Alfresco Garden Terrace', description: 'Open-air outdoor garden tables with ambient lighting', sortOrder: 2 },
+    { id: 'sec-bar', name: 'Cocktail Bar & Lounge', description: 'High-top bar tables and craft cocktail counter', sortOrder: 3 },
+    { id: 'sec-pdr', name: 'Private Dining Room (PDR)', description: 'VIP conference and family banquet salon', sortOrder: 4 }
+  ],
+
+  // Tables
+  restaurantTables: [
+    { id: 'tbl-1', sectionId: 'sec-gf', tableNumber: 'T-01', capacity: 4, status: 'seated', shape: 'square', guestCount: 3, captainName: 'Captain Suresh', currentBillTotal: 1240, seatedAt: '2026-09-20T12:45:00Z', activeOrderId: 'ord-xyz-101' },
+    { id: 'tbl-2', sectionId: 'sec-gf', tableNumber: 'T-02', capacity: 2, status: 'vacant', shape: 'square' },
+    { id: 'tbl-3', sectionId: 'sec-gf', tableNumber: 'T-03', capacity: 6, status: 'ordered', shape: 'rectangle', guestCount: 5, captainName: 'Captain Meera', currentBillTotal: 2850, seatedAt: '2026-09-20T12:30:00Z', lastKotAt: '2026-09-20T12:35:00Z', activeOrderId: 'ord-xyz-102', activeKotIds: ['kot-101'] },
+    { id: 'tbl-4', sectionId: 'sec-gf', tableNumber: 'T-04', capacity: 4, status: 'served', shape: 'square', guestCount: 4, captainName: 'Captain Suresh', currentBillTotal: 1890, seatedAt: '2026-09-20T12:10:00Z', lastKotAt: '2026-09-20T12:15:00Z', activeOrderId: 'ord-xyz-103', activeKotIds: ['kot-102'] },
+    { id: 'tbl-5', sectionId: 'sec-gf', tableNumber: 'T-05', capacity: 2, status: 'billed', shape: 'round', guestCount: 2, captainName: 'Captain Meera', currentBillTotal: 950, seatedAt: '2026-09-20T12:00:00Z', activeOrderId: 'ord-xyz-104' },
+    { id: 'tbl-6', sectionId: 'sec-gf', tableNumber: 'T-06', capacity: 4, status: 'vacant', shape: 'square' },
+    { id: 'tbl-7', sectionId: 'sec-gf', tableNumber: 'T-07', capacity: 8, status: 'vacant', shape: 'rectangle' },
+    { id: 'tbl-8', sectionId: 'sec-gf', tableNumber: 'T-08', capacity: 2, status: 'cleaning', shape: 'round' },
+    { id: 'tbl-9', sectionId: 'sec-terrace', tableNumber: 'TR-01', capacity: 4, status: 'seated', shape: 'round', guestCount: 2, captainName: 'Captain Vikram', currentBillTotal: 1550, seatedAt: '2026-09-20T13:00:00Z', activeOrderId: 'ord-xyz-105' },
+    { id: 'tbl-10', sectionId: 'sec-terrace', tableNumber: 'TR-02', capacity: 4, status: 'vacant', shape: 'round' },
+    { id: 'tbl-11', sectionId: 'sec-terrace', tableNumber: 'TR-03', capacity: 6, status: 'ordered', shape: 'rectangle', guestCount: 6, captainName: 'Captain Vikram', currentBillTotal: 3420, seatedAt: '2026-09-20T12:20:00Z', lastKotAt: '2026-09-20T12:25:00Z', activeOrderId: 'ord-xyz-106', activeKotIds: ['kot-103'] },
+    { id: 'tbl-12', sectionId: 'sec-bar', tableNumber: 'BAR-01', capacity: 2, status: 'served', shape: 'round', guestCount: 2, captainName: 'Captain Arun', currentBillTotal: 750, seatedAt: '2026-09-20T12:40:00Z', activeOrderId: 'ord-xyz-107' },
+    { id: 'tbl-13', sectionId: 'sec-bar', tableNumber: 'BAR-02', capacity: 2, status: 'vacant', shape: 'round' },
+    { id: 'tbl-14', sectionId: 'sec-pdr', tableNumber: 'PDR-01', capacity: 12, status: 'vacant', shape: 'rectangle' }
+  ],
+
+  // Menu Items with Dietary tags & Modifiers
+  restaurantMenuItems: [
+    {
+      id: 'menu-1',
+      name: 'Paneer Butter Masala',
+      code: 'PBM',
+      categoryId: 'cat-rst-mains',
+      categoryName: 'Biryani & Curries',
+      price: 340,
+      taxRate: 5.0,
+      prepTimeMinutes: 15,
+      station: 'kitchen',
+      dietary: 'veg',
+      description: 'Charcoal-smoked cottage cheese in rich makhani gravy with fenugreek butter',
+      isAvailable: true,
+      modifierGroups: [
+        {
+          id: 'mod-portion',
+          name: 'Portion Size',
+          minSelect: 1,
+          maxSelect: 1,
+          options: [
+            { id: 'opt-half', name: 'Regular (Half)', extraPrice: 0 },
+            { id: 'opt-full', name: 'Large (Full Bowl)', extraPrice: 140 }
+          ]
+        },
+        {
+          id: 'mod-spice',
+          name: 'Spice Level',
+          minSelect: 0,
+          maxSelect: 1,
+          options: [
+            { id: 'opt-mild', name: 'Mild & Creamy', extraPrice: 0 },
+            { id: 'opt-med', name: 'Medium Spice', extraPrice: 0 },
+            { id: 'opt-spicy', name: 'Fiery Spicy', extraPrice: 0 }
+          ]
+        },
+        {
+          id: 'mod-addon',
+          name: 'Extra Toppings',
+          minSelect: 0,
+          maxSelect: 2,
+          options: [
+            { id: 'opt-extra-butter', name: 'Dollop of White Butter', extraPrice: 30 },
+            { id: 'opt-extra-cheese', name: 'Grated Amul Cheese', extraPrice: 50 }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'menu-2',
+      name: 'Dum Mutton Biryani',
+      code: 'DMB',
+      categoryId: 'cat-rst-mains',
+      categoryName: 'Biryani & Curries',
+      price: 480,
+      taxRate: 5.0,
+      prepTimeMinutes: 18,
+      station: 'kitchen',
+      dietary: 'non_veg',
+      description: 'Slow-cooked in sealed clay pot with aged basmati, saffron and tender lamb shank',
+      isAvailable: true,
+      modifierGroups: [
+        {
+          id: 'mod-spice-bir',
+          name: 'Spice Blend',
+          minSelect: 0,
+          maxSelect: 1,
+          options: [
+            { id: 'opt-hyderabadi', name: 'Hyderabadi Spicy', extraPrice: 0 },
+            { id: 'opt-lucknowi', name: 'Lucknowi Fragrant Mild', extraPrice: 0 }
+          ]
+        },
+        {
+          id: 'mod-addon-bir',
+          name: 'Accompaniments',
+          minSelect: 0,
+          maxSelect: 2,
+          options: [
+            { id: 'opt-mirchi-ka-salan', name: 'Extra Mirchi Ka Salan', extraPrice: 40 },
+            { id: 'opt-burani-raita', name: 'Garlic Burani Raita', extraPrice: 35 }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'menu-3',
+      name: 'Murgh Malai Tikka',
+      code: 'MMT',
+      categoryId: 'cat-rst-starters',
+      categoryName: 'Tandoor & Starters',
+      price: 390,
+      taxRate: 5.0,
+      prepTimeMinutes: 20,
+      station: 'tandoor',
+      dietary: 'non_veg',
+      description: 'Cream and cardamom marinated chicken morsels grilled in charcoal clay tandoor',
+      isAvailable: true
+    },
+    {
+      id: 'menu-4',
+      name: 'Dal Makhani Bukhara',
+      code: 'DMB-DAL',
+      categoryId: 'cat-rst-mains',
+      categoryName: 'Biryani & Curries',
+      price: 290,
+      taxRate: 5.0,
+      prepTimeMinutes: 12,
+      station: 'kitchen',
+      dietary: 'veg',
+      description: 'Slow-simmered black lentils for 24 hours with tomato, churned butter and garlic',
+      isAvailable: true
+    },
+    {
+      id: 'menu-5',
+      name: 'Garlic Butter Naan',
+      code: 'GBN',
+      categoryId: 'cat-rst-breads',
+      categoryName: 'Artisanal Breads',
+      price: 75,
+      taxRate: 5.0,
+      prepTimeMinutes: 6,
+      station: 'tandoor',
+      dietary: 'veg',
+      description: 'Hand-stretched refined wheat bread with toasted garlic bits and melted butter',
+      isAvailable: true
+    },
+    {
+      id: 'menu-6',
+      name: 'Tandoori Butter Roti',
+      code: 'TBR',
+      categoryId: 'cat-rst-breads',
+      categoryName: 'Artisanal Breads',
+      price: 40,
+      taxRate: 5.0,
+      prepTimeMinutes: 5,
+      station: 'tandoor',
+      dietary: 'veg',
+      description: 'Whole wheat flatbread cooked crisp on the inner tandoor clay wall',
+      isAvailable: true
+    },
+    {
+      id: 'menu-7',
+      name: 'Alphonso Mango Kulfi',
+      code: 'AMK',
+      categoryId: 'cat-rst-dessert',
+      categoryName: 'Signature Desserts',
+      price: 180,
+      taxRate: 5.0,
+      prepTimeMinutes: 5,
+      station: 'dessert',
+      dietary: 'veg',
+      description: 'Traditional slow-reduced milk kulfi on stick infused with Ratnagiri alphonso pulp',
+      isAvailable: true
+    },
+    {
+      id: 'menu-8',
+      name: 'Classic Virgin Mojito',
+      code: 'CVM',
+      categoryId: 'cat-rst-drinks',
+      categoryName: 'Beverages & Mocktails',
+      price: 220,
+      taxRate: 5.0,
+      prepTimeMinutes: 5,
+      station: 'bar',
+      dietary: 'veg',
+      description: 'Muddled fresh garden mint leaves, Persian lime chunks, crushed ice and bubbly soda',
+      isAvailable: true
+    },
+    {
+      id: 'menu-9',
+      name: 'Desi Masala Craft Soda',
+      code: 'MCS',
+      categoryId: 'cat-rst-drinks',
+      categoryName: 'Beverages & Mocktails',
+      price: 120,
+      taxRate: 5.0,
+      prepTimeMinutes: 3,
+      station: 'bar',
+      dietary: 'veg',
+      description: 'Refreshing digestive rock-salt soda with roasted cumin, mint, and lemon juice',
+      isAvailable: true
+    }
+  ],
+
+  // Recipe & Bill of Materials (BOM) for Kitchen Inventory Control
+  restaurantRecipes: [
+    {
+      id: 'rec-1',
+      menuItemId: 'menu-1',
+      menuItemName: 'Paneer Butter Masala',
+      portionSize: '1 Portion (450g)',
+      ingredients: [
+        { rawMaterialProductId: 'rm-paneer', rawMaterialName: 'Fresh Malai Paneer', quantityNeeded: 0.20, unit: 'kg', unitCost: 320 },
+        { rawMaterialProductId: 'rm-butter', rawMaterialName: 'Pure Cow Butter', quantityNeeded: 0.04, unit: 'kg', unitCost: 520 },
+        { rawMaterialProductId: 'rm-cream', rawMaterialName: 'Cooking Cream', quantityNeeded: 0.05, unit: 'L', unitCost: 210 },
+        { rawMaterialProductId: 'rm-spices', rawMaterialName: 'Shahi Spices', quantityNeeded: 0.015, unit: 'kg', unitCost: 1200 }
+      ],
+      totalCost: 113.30,
+      sellingPrice: 340,
+      marginPercentage: 66.7,
+      notes: 'Standard restaurant portion with 8 paneer cubes'
+    },
+    {
+      id: 'rec-2',
+      menuItemId: 'menu-2',
+      menuItemName: 'Dum Mutton Biryani',
+      portionSize: '1 Handi (650g)',
+      ingredients: [
+        { rawMaterialProductId: 'rm-chicken', rawMaterialName: 'Farm Fresh Chicken/Meat', quantityNeeded: 0.25, unit: 'kg', unitCost: 240 },
+        { rawMaterialProductId: 'rm-rice', rawMaterialName: 'Aged Dum Basmati Rice', quantityNeeded: 0.20, unit: 'kg', unitCost: 110 },
+        { rawMaterialProductId: 'rm-butter', rawMaterialName: 'Pure Cow Butter', quantityNeeded: 0.03, unit: 'kg', unitCost: 520 },
+        { rawMaterialProductId: 'rm-spices', rawMaterialName: 'Shahi Biryani Spice Blend', quantityNeeded: 0.02, unit: 'kg', unitCost: 1200 }
+      ],
+      totalCost: 121.60,
+      sellingPrice: 480,
+      marginPercentage: 74.7,
+      notes: 'Sealed dum pot with bone-in tender meat'
+    },
+    {
+      id: 'rec-3',
+      menuItemId: 'menu-5',
+      menuItemName: 'Garlic Butter Naan',
+      portionSize: '1 Piece (150g)',
+      ingredients: [
+        { rawMaterialProductId: 'rm-atta', rawMaterialName: 'Chakki Whole Wheat Atta', quantityNeeded: 0.12, unit: 'kg', unitCost: 45 },
+        { rawMaterialProductId: 'rm-butter', rawMaterialName: 'Pure Cow Butter', quantityNeeded: 0.02, unit: 'kg', unitCost: 520 }
+      ],
+      totalCost: 15.80,
+      sellingPrice: 75,
+      marginPercentage: 78.9,
+      notes: 'Oven-stretched with crushed garlic glaze'
+    }
+  ],
+
+  // Active Kitchen Order Tickets (KOTs)
+  restaurantKots: [
+    {
+      id: 'kot-101',
+      kotNumber: 'KOT-001',
+      orderId: 'ord-xyz-102',
+      tableId: 'tbl-3',
+      tableNumber: 'T-03',
+      sectionName: 'Ground Floor AC Dining',
+      station: 'kitchen',
+      captainName: 'Captain Meera',
+      status: 'fired',
+      firedAt: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+      items: [
+        { id: 'ki-1', menuItemId: 'menu-1', name: 'Paneer Butter Masala', quantity: 2, unitPrice: 340, station: 'kitchen', status: 'cooking', specialNotes: 'Less spicy, extra gravy' },
+        { id: 'ki-2', menuItemId: 'menu-4', name: 'Dal Makhani Bukhara', quantity: 1, unitPrice: 290, station: 'kitchen', status: 'cooking' },
+        { id: 'ki-3', menuItemId: 'menu-5', name: 'Garlic Butter Naan', quantity: 4, unitPrice: 75, station: 'tandoor', status: 'pending' }
+      ]
+    },
+    {
+      id: 'kot-102',
+      kotNumber: 'KOT-002',
+      orderId: 'ord-xyz-103',
+      tableId: 'tbl-4',
+      tableNumber: 'T-04',
+      sectionName: 'Ground Floor AC Dining',
+      station: 'kitchen',
+      captainName: 'Captain Suresh',
+      status: 'served',
+      firedAt: new Date(Date.now() - 42 * 60 * 1000).toISOString(),
+      readyAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+      servedAt: new Date(Date.now() - 22 * 60 * 1000).toISOString(),
+      items: [
+        { id: 'ki-4', menuItemId: 'menu-2', name: 'Dum Mutton Biryani', quantity: 2, unitPrice: 480, station: 'kitchen', status: 'served' },
+        { id: 'ki-5', menuItemId: 'menu-3', name: 'Murgh Malai Tikka', quantity: 1, unitPrice: 390, station: 'tandoor', status: 'served' },
+        { id: 'ki-6', menuItemId: 'menu-8', name: 'Classic Virgin Mojito', quantity: 2, unitPrice: 220, station: 'bar', status: 'served' }
+      ]
+    },
+    {
+      id: 'kot-103',
+      kotNumber: 'KOT-003',
+      orderId: 'ord-xyz-106',
+      tableId: 'tbl-11',
+      tableNumber: 'TR-03',
+      sectionName: 'Alfresco Garden Terrace',
+      station: 'kitchen',
+      captainName: 'Captain Vikram',
+      status: 'fired',
+      firedAt: new Date(Date.now() - 14 * 60 * 1000).toISOString(),
+      items: [
+        { id: 'ki-7', menuItemId: 'menu-3', name: 'Murgh Malai Tikka', quantity: 2, unitPrice: 390, station: 'tandoor', status: 'cooking' },
+        { id: 'ki-8', menuItemId: 'menu-2', name: 'Dum Mutton Biryani', quantity: 3, unitPrice: 480, station: 'kitchen', status: 'cooking' },
+        { id: 'ki-9', menuItemId: 'menu-9', name: 'Desi Masala Craft Soda', quantity: 4, unitPrice: 120, station: 'bar', status: 'ready' }
+      ]
+    }
+  ],
+
+  // Waste & Spoilage Register
+  restaurantWasteLogs: [
+    {
+      id: 'wst-1',
+      date: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+      kotId: 'KOT-089',
+      tableNumber: 'T-02',
+      itemName: 'Murgh Malai Tikka',
+      quantity: 1,
+      unit: 'portion',
+      estimatedCost: 106.00,
+      reason: 'Over-charred in tandoor during peak rush',
+      authorizedBy: 'Chef Rahul Kapoor',
+      status: 'approved'
+    }
+  ],
+
+  restaurantTableAudits: []
 };
 
 // ==========================================

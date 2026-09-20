@@ -7,3 +7,4 @@ export * from './subscription';
 export * from './report';
 export * from './entitlement';
 export * from './pos';
+export * from './restaurant';

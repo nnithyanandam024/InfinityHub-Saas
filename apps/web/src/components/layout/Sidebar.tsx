@@ -27,7 +27,11 @@ import {
   TrendingUp,
   Receipt,
   Banknote,
-  Users
+  Users,
+  UtensilsCrossed,
+  ChefHat,
+  CookingPot,
+  ShieldAlert
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -43,6 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
 
   const isPosApp = tenant?.applicationId === 'pos';
+  const isRestaurantApp = tenant?.applicationId === 'restaurant';
 
   // Standardized button styling for uniform visual rhythm and alignment
   const getNavLinkClass = (isActive: boolean) =>
@@ -78,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               InfinityHub
             </span>
             <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">
-              {isPosApp ? 'Billing & POS' : 'Inventory App'}
+              {isRestaurantApp ? 'Restaurant Ops' : isPosApp ? 'Billing & POS' : 'Inventory App'}
             </span>
           </div>
         </div>
@@ -111,8 +116,74 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Navigation items */}
         <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-4 space-y-6">
-          {/* SECTION 1: POS BILLING OPERATIONS (Always on top for POS apps) */}
-          {isPosApp && (
+          {/* SECTION 1A: RESTAURANT OPERATIONS (When Restaurant app is active) */}
+          {isRestaurantApp && (
+            <div>
+              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-orange-600 flex items-center justify-between">
+                <span>Restaurant Ops</span>
+                <span className="text-[9px] bg-orange-100 text-orange-800 px-1 rounded font-bold">FOH</span>
+              </div>
+              <nav className="space-y-1">
+                <NavLink
+                  to="/restaurant/tables"
+                  onClick={onClose}
+                  className={({ isActive }) => getNavLinkClass(isActive)}
+                >
+                  <UtensilsCrossed className="w-4 h-4 shrink-0 text-orange-600" />
+                  <span className="flex-1">Floor Plan & Tables</span>
+                </NavLink>
+
+                <NavLink
+                  to="/restaurant/kds"
+                  onClick={onClose}
+                  className={({ isActive }) => getNavLinkClass(isActive)}
+                >
+                  <ChefHat className="w-4 h-4 shrink-0 text-amber-600" />
+                  <span className="flex-1">Kitchen Display (KDS)</span>
+                  <span className="text-[9px] font-mono font-bold bg-amber-100 text-amber-800 px-1 py-0.5 rounded">Live</span>
+                </NavLink>
+
+                <NavLink
+                  to="/restaurant/recipes"
+                  onClick={onClose}
+                  className={({ isActive }) => getNavLinkClass(isActive)}
+                >
+                  <CookingPot className="w-4 h-4 shrink-0 text-purple-600" />
+                  <span>Recipes & BOM</span>
+                </NavLink>
+
+                <NavLink
+                  to="/restaurant/audit"
+                  onClick={onClose}
+                  className={({ isActive }) => getNavLinkClass(isActive)}
+                >
+                  <ShieldAlert className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>Anti-Theft Audits</span>
+                </NavLink>
+
+                <NavLink
+                  to="/pos/shifts"
+                  onClick={onClose}
+                  className={({ isActive }) => getNavLinkClass(isActive)}
+                >
+                  <Banknote className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <span>Shifts & Cash Drawer</span>
+                </NavLink>
+
+                <NavLink
+                  to="/pos/customers"
+                  onClick={onClose}
+                  className={({ isActive }) => getNavLinkClass(isActive)}
+                >
+                  <Users className="w-4 h-4 shrink-0" />
+                  <span>Customer Khata</span>
+                </NavLink>
+              </nav>
+            </div>
+          )}
+
+          {/* SECTION 1B: POS BILLING OPERATIONS (When standalone POS app is active) */}
+          {isPosApp && !isRestaurantApp && (
             <div>
               <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Billing & Counter
@@ -158,8 +229,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* SECTION 1 ALTERNATIVE: OVERVIEW FOR INVENTORY APPS */}
-          {!isPosApp && (
+          {/* SECTION 1C: OVERVIEW FOR PURE INVENTORY APPS */}
+          {!isPosApp && !isRestaurantApp && (
             <div>
               <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Overview

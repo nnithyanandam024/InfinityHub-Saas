@@ -64,7 +64,7 @@ export const LoginPage: React.FC = () => {
       if (userTenant?.applicationId === 'pos') {
         navigate('/pos/dashboard');
       } else if (userTenant?.applicationId === 'restaurant') {
-        navigate('/restaurant/dashboard');
+        navigate('/restaurant/tables');
       } else {
         navigate('/dashboard');
       }

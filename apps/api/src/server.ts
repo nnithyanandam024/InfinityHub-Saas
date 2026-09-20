@@ -607,8 +607,8 @@ const server = http.createServer(async (req, res) => {
 
         if (target) {
           const cat = store.categories.find(c => c.id === target.categoryId);
-          if (cat && cat.productCount > 0) {
-            cat.productCount--;
+          if (cat && (cat.productCount ?? 0) > 0) {
+            cat.productCount = (cat.productCount || 0) - 1;
           }
         }
 
@@ -886,6 +886,8 @@ const server = http.createServer(async (req, res) => {
               newStock: product.stockQuantity,
               reason: `PO ${newPo.invoiceNumber} Inward Goods`,
               referenceId: newPo.id,
+              performedByUserId: 'usr-api-admin',
+              performedByUserName: 'Inventory Manager',
               createdAt: new Date().toISOString()
             };
             store.stockMovements.unshift(movement);
@@ -946,6 +948,8 @@ const server = http.createServer(async (req, res) => {
               newStock: product.stockQuantity,
               reason: `Void PO ${po.invoiceNumber} Inventory Reversal`,
               referenceId: po.id,
+              performedByUserId: 'usr-api-admin',
+              performedByUserName: 'Inventory Manager',
               createdAt: new Date().toISOString()
             };
             store.stockMovements.unshift(movement);
@@ -1012,6 +1016,8 @@ const server = http.createServer(async (req, res) => {
         previousStock: oldStock,
         newStock: product.stockQuantity,
         reason,
+        performedByUserId: 'usr-api-admin',
+        performedByUserName: 'Inventory Manager',
         createdAt: new Date().toISOString()
       };
       store.stockMovements.unshift(movement);
@@ -1052,7 +1058,7 @@ const server = http.createServer(async (req, res) => {
       const activeShift = store.shifts?.find(s => s.status === 'open') || null;
 
       const taxConfig = {
-        gstin: store.tenant.settings?.taxNumber || (store.tenant.id === 'tenant-kumar-stores' ? '33AAECK1234F1Z5' : '33AABCC7890D1Z2'),
+        gstin: (store.tenant.settings as any)?.taxNumber || (store.tenant.id === 'tenant-kumar-stores' ? '33AAECK1234F1Z5' : '33AABCC7890D1Z2'),
         pan: 'AABCC7890D',
         state: 'Tamil Nadu',
         stateCode: '33',
@@ -1423,6 +1429,8 @@ const server = http.createServer(async (req, res) => {
             previousStock: oldStock,
             newStock: product.stockQuantity,
             reason: `POS Sale: ${invoiceNumber}`,
+            performedByUserId: 'usr-pos-cashier',
+            performedByUserName: 'POS Cashier',
             createdAt: new Date().toISOString()
           });
         }
@@ -1531,7 +1539,7 @@ const server = http.createServer(async (req, res) => {
         tenantId,
         tenantName: store.tenant.name,
         tenantAddress: store.tenant.address || 'Chennai, Tamil Nadu',
-        tenantGstin: store.tenant.settings?.taxNumber || '33AABCC7890D1Z2',
+        tenantGstin: (store.tenant.settings as any)?.taxNumber || '33AABCC7890D1Z2',
         tenantPan: 'AABCC7890D',
         tenantState: 'Tamil Nadu',
         tenantStateCode,
@@ -1666,6 +1674,8 @@ const server = http.createServer(async (req, res) => {
             previousStock: oldStock,
             newStock: prod.stockQuantity,
             reason: `Sales Return (CN): ${inv.invoiceNumber}`,
+            performedByUserId: 'usr-pos-cashier',
+            performedByUserName: 'POS Cashier',
             createdAt: new Date().toISOString()
           });
         }
@@ -1777,6 +1787,8 @@ const server = http.createServer(async (req, res) => {
             previousStock: oldStock,
             newStock: prod.stockQuantity,
             reason: `Invoice Voided: ${inv.invoiceNumber} (${body.reason || 'Manager Void'})`,
+            performedByUserId: 'usr-pos-mgr',
+            performedByUserName: 'POS Manager',
             createdAt: new Date().toISOString()
           });
         }

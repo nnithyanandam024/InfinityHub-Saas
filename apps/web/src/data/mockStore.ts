@@ -1,4 +1,41 @@
-import { Tenant, TenantMobileBranding, User, Role, Product, Category, Supplier, Purchase, StockMovement, Plan, Module, TenantUsageMetadata, Brand, ProductVariant, ProductBundle, Warehouse, WarehouseLocation, StockBalance, StockTransfer, StockTransferItem, Batch, SerialNumber, SerialStatus, StocktakeSession, ReorderRule, PurchaseSuggestion, ForecastingReport } from '@infinityhub/types';
+import {
+  Tenant,
+  TenantMobileBranding,
+  User,
+  Role,
+  Product,
+  Category,
+  Supplier,
+  Purchase,
+  StockMovement,
+  Plan,
+  Module,
+  TenantUsageMetadata,
+  Brand,
+  ProductVariant,
+  ProductBundle,
+  Warehouse,
+  WarehouseLocation,
+  StockBalance,
+  StockTransfer,
+  StockTransferItem,
+  Batch,
+  SerialNumber,
+  SerialStatus,
+  StocktakeSession,
+  ReorderRule,
+  PurchaseSuggestion,
+  ForecastingReport,
+  RestaurantSection,
+  RestaurantTable,
+  RestaurantMenuItem,
+  RestaurantOrder,
+  RestaurantKot,
+  RestaurantRecipe,
+  RestaurantWasteLog,
+  TableTransferAudit,
+  KotItemStatus
+} from '@infinityhub/types';
 import { BulkImportRowData } from '@infinityhub/validation';
 import { INITIAL_TENANTS_MAP, MOCK_PLANS, MOCK_SUPER_ADMIN_USER, TenantData } from './initialData';
 import { PLATFORM_MODULES, ROLE_PERMISSIONS } from '@infinityhub/constants';
@@ -27,6 +64,10 @@ class MockDataStore {
         this.superAdmin = parsed.superAdmin || MOCK_SUPER_ADMIN_USER;
         this.plans = parsed.plans || MOCK_PLANS;
         this.modules = parsed.modules || PLATFORM_MODULES;
+        if (!this.data['tenant-xyz-restaurant']?.restaurantSections?.length) {
+          this.data['tenant-xyz-restaurant'] = JSON.parse(JSON.stringify(INITIAL_TENANTS_MAP['tenant-xyz-restaurant']));
+          this.persist();
+        }
         return;
       } catch (e) {
         console.error('Failed to parse cached store, re-initializing defaults', e);
@@ -2173,6 +2214,586 @@ class MockDataStore {
     }
     this.persist();
     return { importedCount };
+  }
+
+  private getTenantData(tenantId: string): TenantData {
+    const tenant = this.data[tenantId];
+    if (!tenant) {
+      throw new Error(`Tenant ${tenantId} not found in store`);
+    }
+    return tenant;
+  }
+
+  // ==========================================================
+  // RESTAURANT MANAGEMENT DOMAIN (FOH, KDS, Anti-Theft & BOM)
+  // ==========================================================
+
+  public getRestaurantSections(tenantId: string): RestaurantSection[] {
+    const tenant = this.getTenantData(tenantId);
+    return tenant.restaurantSections || [];
+  }
+
+  public getRestaurantTables(tenantId: string): RestaurantTable[] {
+    const tenant = this.getTenantData(tenantId);
+    return tenant.restaurantTables || [];
+  }
+
+  public getRestaurantMenuItems(tenantId: string): RestaurantMenuItem[] {
+    const tenant = this.getTenantData(tenantId);
+    return tenant.restaurantMenuItems || [];
+  }
+
+  public getRestaurantKots(tenantId: string): RestaurantKot[] {
+    const tenant = this.getTenantData(tenantId);
+    return tenant.restaurantKots || [];
+  }
+
+  public getRestaurantOrders(tenantId: string): RestaurantOrder[] {
+    const tenant = this.getTenantData(tenantId);
+    return tenant.restaurantOrders || [];
+  }
+
+  public getRestaurantRecipes(tenantId: string): RestaurantRecipe[] {
+    const tenant = this.getTenantData(tenantId);
+    return tenant.restaurantRecipes || [];
+  }
+
+  public getRestaurantWasteLogs(tenantId: string): RestaurantWasteLog[] {
+    const tenant = this.getTenantData(tenantId);
+    return tenant.restaurantWasteLogs || [];
+  }
+
+  public getTableAudits(tenantId: string): TableTransferAudit[] {
+    const tenant = this.getTenantData(tenantId);
+    return tenant.restaurantTableAudits || [];
+  }
+
+  public seatTable(
+    tenantId: string,
+    tableId: string,
+    guestCount: number,
+    captainName: string
+  ): RestaurantTable {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantTables) tenant.restaurantTables = [];
+
+    const table = tenant.restaurantTables.find((t: RestaurantTable) => t.id === tableId);
+    if (!table) throw new Error('Table not found');
+
+    const orderId = `ord-${Date.now()}`;
+    table.status = 'seated';
+    table.guestCount = guestCount;
+    table.captainName = captainName;
+    table.seatedAt = new Date().toISOString();
+    table.activeOrderId = orderId;
+    table.activeKotIds = [];
+    table.currentBillTotal = 0;
+
+    if (!tenant.restaurantOrders) tenant.restaurantOrders = [];
+    const section = tenant.restaurantSections?.find((s: RestaurantSection) => s.id === table.sectionId);
+
+    const newOrder: RestaurantOrder = {
+      id: orderId,
+      orderNumber: `ORD-${Date.now().toString().slice(-4)}`,
+      orderType: 'dine_in',
+      tableId: table.id,
+      tableNumber: table.tableNumber,
+      sectionName: section?.name || 'Dining Area',
+      guestCount,
+      captainName,
+      kots: [],
+      subtotal: 0,
+      discount: 0,
+      serviceCharge: 0,
+      cgst: 0,
+      sgst: 0,
+      roundOff: 0,
+      grandTotal: 0,
+      payments: [],
+      orderStatus: 'open',
+      billPrintedCount: 0,
+      reprintHistory: [],
+      createdAt: new Date().toISOString()
+    };
+    tenant.restaurantOrders.unshift(newOrder);
+
+    this.persist();
+    return table;
+  }
+
+  public fireKot(
+    tenantId: string,
+    tableId: string,
+    items: Array<{
+      menuItemId: string;
+      name: string;
+      quantity: number;
+      unitPrice: number;
+      station: 'kitchen' | 'tandoor' | 'bar' | 'dessert' | 'pantry';
+      selectedModifiers?: any[];
+      specialNotes?: string;
+    }>,
+    captainName: string
+  ): { kot: RestaurantKot; table: RestaurantTable } {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantTables) tenant.restaurantTables = [];
+    if (!tenant.restaurantKots) tenant.restaurantKots = [];
+    if (!tenant.restaurantOrders) tenant.restaurantOrders = [];
+
+    const table = tenant.restaurantTables.find((t: RestaurantTable) => t.id === tableId);
+    if (!table) throw new Error('Table not found');
+
+    let order = tenant.restaurantOrders.find((o: RestaurantOrder) => o.id === table.activeOrderId);
+    if (!order) {
+      // Auto-create order if table was somehow unseated
+      const orderId = `ord-${Date.now()}`;
+      order = {
+        id: orderId,
+        orderNumber: `ORD-${Date.now().toString().slice(-4)}`,
+        orderType: 'dine_in',
+        tableId: table.id,
+        tableNumber: table.tableNumber,
+        guestCount: table.guestCount || 2,
+        captainName: captainName || table.assignedCaptain || 'Captain',
+        kots: [],
+        subtotal: 0,
+        discount: 0,
+        serviceCharge: 0,
+        cgst: 0,
+        sgst: 0,
+        roundOff: 0,
+        grandTotal: 0,
+        payments: [],
+        orderStatus: 'open',
+        billPrintedCount: 0,
+        reprintHistory: [],
+        createdAt: new Date().toISOString()
+      };
+      tenant.restaurantOrders.unshift(order);
+      table.activeOrderId = orderId;
+      table.seatedAt = table.seatedAt || new Date().toISOString();
+    }
+
+    const kotSeq = (tenant.restaurantKots.length + 1).toString().padStart(3, '0');
+    const kotId = `kot-${Date.now()}`;
+    const section = tenant.restaurantSections?.find((s: RestaurantSection) => s.id === table.sectionId);
+
+    const kotItems = items.map((itm, idx) => ({
+      id: `ki-${Date.now()}-${idx}`,
+      menuItemId: itm.menuItemId,
+      name: itm.name,
+      quantity: itm.quantity,
+      unitPrice: itm.unitPrice,
+      selectedModifiers: itm.selectedModifiers,
+      specialNotes: itm.specialNotes,
+      station: itm.station || 'kitchen',
+      status: 'cooking' as KotItemStatus
+    }));
+
+    const newKot: RestaurantKot = {
+      id: kotId,
+      kotNumber: `KOT-${kotSeq}`,
+      orderId: order.id,
+      tableId: table.id,
+      tableNumber: table.tableNumber,
+      sectionName: section?.name || 'Main Dining',
+      station: items[0]?.station || 'kitchen',
+      captainName: captainName || table.assignedCaptain || 'Captain',
+      status: 'fired',
+      items: kotItems,
+      firedAt: new Date().toISOString()
+    };
+
+    tenant.restaurantKots.unshift(newKot);
+    order.kots.push(newKot);
+
+    // Recalculate order running total
+    let subtotal = 0;
+    for (const k of order.kots) {
+      for (const itm of k.items) {
+        if (itm.status !== 'cancelled') {
+          const modTotal = (itm.selectedModifiers || []).reduce((acc: number, m: any) => acc + (m.extraPrice || 0), 0);
+          subtotal += (itm.unitPrice + modTotal) * itm.quantity;
+        }
+      }
+    }
+    const cgst = subtotal * 0.025; // 2.5%
+    const sgst = subtotal * 0.025; // 2.5%
+    const grandTotal = Math.round(subtotal + cgst + sgst);
+
+    order.subtotal = subtotal;
+    order.cgst = cgst;
+    order.sgst = sgst;
+    order.grandTotal = grandTotal;
+
+    table.status = 'ordered';
+    table.lastKotAt = new Date().toISOString();
+    table.currentBillTotal = grandTotal;
+    if (!table.activeKotIds) table.activeKotIds = [];
+    table.activeKotIds.push(kotId);
+
+    this.persist();
+    return { kot: newKot, table };
+  }
+
+  public updateKotItemStatus(
+    tenantId: string,
+    kotId: string,
+    itemId: string,
+    status: KotItemStatus
+  ): RestaurantKot {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantKots) tenant.restaurantKots = [];
+
+    const kot = tenant.restaurantKots.find((k: RestaurantKot) => k.id === kotId);
+    if (!kot) throw new Error('KOT not found');
+
+    const itm = kot.items.find((i: any) => i.id === itemId);
+    if (itm) {
+      itm.status = status;
+    }
+
+    const allReadyOrServed = kot.items.every((i: any) => i.status === 'ready' || i.status === 'served' || i.status === 'cancelled');
+    if (allReadyOrServed && kot.status !== 'ready' && kot.status !== 'served') {
+      kot.status = 'ready';
+      kot.readyAt = new Date().toISOString();
+    }
+
+    // Also update table status to 'served' if all items served
+    const table = tenant.restaurantTables?.find((t: RestaurantTable) => t.id === kot.tableId);
+    if (table && status === 'served') {
+      table.status = 'served';
+    }
+
+    this.persist();
+    return kot;
+  }
+
+  public bumpKot(tenantId: string, kotId: string): RestaurantKot {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantKots) tenant.restaurantKots = [];
+
+    const kot = tenant.restaurantKots.find((k: RestaurantKot) => k.id === kotId);
+    if (!kot) throw new Error('KOT not found');
+
+    kot.status = 'ready';
+    kot.readyAt = new Date().toISOString();
+    kot.items.forEach((i: any) => {
+      if (i.status === 'cooking' || i.status === 'pending') {
+        i.status = 'ready';
+      }
+    });
+
+    this.persist();
+    return kot;
+  }
+
+  public voidKotItem(
+    tenantId: string,
+    kotId: string,
+    itemId: string,
+    reason: string,
+    managerPin: string,
+    authorizedBy = 'Manager Vikram'
+  ): { kot: RestaurantKot; wasteLog: RestaurantWasteLog } {
+    if (managerPin !== '1234') {
+      throw new Error('Invalid Manager PIN. Void authorization rejected.');
+    }
+
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantKots) tenant.restaurantKots = [];
+    if (!tenant.restaurantWasteLogs) tenant.restaurantWasteLogs = [];
+
+    const kot = tenant.restaurantKots.find((k: RestaurantKot) => k.id === kotId);
+    if (!kot) throw new Error('KOT not found');
+
+    const itm = kot.items.find((i: any) => i.id === itemId);
+    if (!itm) throw new Error('Item not found in KOT');
+
+    itm.status = 'cancelled';
+    itm.cancelledReason = reason;
+    itm.cancelledAt = new Date().toISOString();
+
+    // Log in Kitchen Waste & Spoilage Register
+    const recipe = tenant.restaurantRecipes?.find((r: RestaurantRecipe) => r.menuItemId === itm.menuItemId);
+    const estimatedCost = (recipe ? recipe.totalCost : itm.unitPrice * 0.35) * itm.quantity;
+
+    const wasteLog: RestaurantWasteLog = {
+      id: `wst-${Date.now()}`,
+      date: new Date().toISOString(),
+      kotId: kot.kotNumber,
+      tableNumber: kot.tableNumber,
+      itemName: itm.name,
+      quantity: itm.quantity,
+      unit: 'portion',
+      estimatedCost,
+      reason: `Void KOT Item: ${reason}`,
+      authorizedBy,
+      status: 'approved'
+    };
+    tenant.restaurantWasteLogs.unshift(wasteLog);
+
+    // Recalculate Table and Order Running Total
+    const order = tenant.restaurantOrders?.find((o: RestaurantOrder) => o.id === kot.orderId);
+    if (order) {
+      let subtotal = 0;
+      for (const k of order.kots) {
+        for (const item of k.items) {
+          if (item.status !== 'cancelled') {
+            const modTotal = (item.selectedModifiers || []).reduce((acc: number, m: any) => acc + (m.extraPrice || 0), 0);
+            subtotal += (item.unitPrice + modTotal) * item.quantity;
+          }
+        }
+      }
+      const cgst = subtotal * 0.025;
+      const sgst = subtotal * 0.025;
+      order.subtotal = subtotal;
+      order.cgst = cgst;
+      order.sgst = sgst;
+      order.grandTotal = Math.round(subtotal + cgst + sgst);
+
+      const table = tenant.restaurantTables?.find((t: RestaurantTable) => t.id === kot.tableId);
+      if (table) {
+        table.currentBillTotal = order.grandTotal;
+      }
+    }
+
+    this.persist();
+    return { kot, wasteLog };
+  }
+
+  public transferTable(
+    tenantId: string,
+    sourceTableId: string,
+    targetTableId: string,
+    reason: string,
+    managerPin: string,
+    transferredBy = 'Captain'
+  ): TableTransferAudit {
+    if (managerPin !== '1234') {
+      throw new Error('Invalid Manager PIN. Table transfer rejected.');
+    }
+
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantTables) tenant.restaurantTables = [];
+    if (!tenant.restaurantTableAudits) tenant.restaurantTableAudits = [];
+
+    const source = tenant.restaurantTables.find((t: RestaurantTable) => t.id === sourceTableId);
+    const target = tenant.restaurantTables.find((t: RestaurantTable) => t.id === targetTableId);
+
+    if (!source || !target) throw new Error('Source or Target table not found');
+    if (target.status !== 'vacant') throw new Error(`Target table ${target.tableNumber} is already occupied (${target.status})`);
+
+    // Move order over
+    target.status = source.status;
+    target.activeOrderId = source.activeOrderId;
+    target.activeKotIds = source.activeKotIds;
+    target.guestCount = source.guestCount;
+    target.seatedAt = source.seatedAt;
+    target.lastKotAt = source.lastKotAt;
+    target.currentBillTotal = source.currentBillTotal;
+    target.assignedCaptain = source.assignedCaptain;
+
+    // Reset source
+    source.status = 'vacant';
+    source.activeOrderId = undefined;
+    source.activeKotIds = [];
+    source.guestCount = undefined;
+    source.seatedAt = undefined;
+    source.lastKotAt = undefined;
+    source.currentBillTotal = 0;
+
+    // Update order reference
+    const order = tenant.restaurantOrders?.find((o: RestaurantOrder) => o.id === target.activeOrderId);
+    if (order) {
+      order.tableId = target.id;
+      order.tableNumber = target.tableNumber;
+    }
+
+    const audit: TableTransferAudit = {
+      id: `xfer-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      sourceTable: source.tableNumber,
+      targetTable: target.tableNumber,
+      transferredBy,
+      authorizedBy: 'Manager Vikram',
+      reason,
+      itemCount: order?.kots.reduce((acc: number, k: RestaurantKot) => acc + k.items.length, 0) || 0
+    };
+    tenant.restaurantTableAudits.unshift(audit);
+
+    this.persist();
+    return audit;
+  }
+
+  public printGuestCheck(
+    tenantId: string,
+    tableId: string,
+    reprintedBy = 'Cashier Priya',
+    reprintReason?: string
+  ): { order: RestaurantOrder; isDuplicate: boolean; printCount: number } {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantTables) tenant.restaurantTables = [];
+
+    const table = tenant.restaurantTables.find((t: RestaurantTable) => t.id === tableId);
+    if (!table) throw new Error('Table not found');
+
+    const order = tenant.restaurantOrders?.find((o: RestaurantOrder) => o.id === table.activeOrderId);
+    if (!order) throw new Error('Active order not found for table');
+
+    table.status = 'billed';
+    order.orderStatus = 'billed';
+    order.lastBilledAt = new Date().toISOString();
+    order.billPrintedCount = (order.billPrintedCount || 0) + 1;
+
+    const isDuplicate = order.billPrintedCount > 1;
+    if (isDuplicate) {
+      order.reprintHistory.push({
+        timestamp: new Date().toISOString(),
+        reprintedBy,
+        reason: reprintReason || 'Guest requested revised copy'
+      });
+    }
+
+    this.persist();
+    return { order, isDuplicate, printCount: order.billPrintedCount };
+  }
+
+  public settleTableBill(
+    tenantId: string,
+    tableId: string,
+    payload: {
+      payments: Array<{ method: 'cash' | 'upi' | 'card' | 'credit_khata' | 'split'; amount: number; reference?: string }>;
+      customerName?: string;
+      customerPhone?: string;
+      serviceChargePercentage?: number;
+      discountAmount?: number;
+    }
+  ): { order: RestaurantOrder; table: RestaurantTable } {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantTables) tenant.restaurantTables = [];
+
+    const table = tenant.restaurantTables.find((t: RestaurantTable) => t.id === tableId);
+    if (!table) throw new Error('Table not found');
+
+    const order = tenant.restaurantOrders?.find((o: RestaurantOrder) => o.id === table.activeOrderId);
+    if (!order) throw new Error('No active order to settle');
+
+    // Calculate final billing breakdown
+    let subtotal = 0;
+    const soldMenuItems: Array<{ menuItemId: string; quantity: number }> = [];
+
+    for (const k of order.kots) {
+      for (const item of k.items) {
+        if (item.status !== 'cancelled') {
+          const modTotal = (item.selectedModifiers || []).reduce((acc: number, m: any) => acc + (m.extraPrice || 0), 0);
+          subtotal += (item.unitPrice + modTotal) * item.quantity;
+          soldMenuItems.push({ menuItemId: item.menuItemId, quantity: item.quantity });
+        }
+      }
+    }
+
+    const discount = payload.discountAmount || 0;
+    const taxableSubtotal = Math.max(0, subtotal - discount);
+    const serviceCharge = payload.serviceChargePercentage ? taxableSubtotal * (payload.serviceChargePercentage / 100) : 0;
+    const cgst = taxableSubtotal * 0.025; // 2.5%
+    const sgst = taxableSubtotal * 0.025; // 2.5%
+    const exactTotal = taxableSubtotal + serviceCharge + cgst + sgst;
+    const grandTotal = Math.round(exactTotal);
+    const roundOff = Number((grandTotal - exactTotal).toFixed(2));
+
+    order.subtotal = subtotal;
+    order.discount = discount;
+    order.serviceCharge = serviceCharge;
+    order.cgst = cgst;
+    order.sgst = sgst;
+    order.roundOff = roundOff;
+    order.grandTotal = grandTotal;
+    order.payments = payload.payments;
+    order.customerName = payload.customerName;
+    order.customerPhone = payload.customerPhone;
+    order.orderStatus = 'settled';
+    order.settledAt = new Date().toISOString();
+
+    // ========================================================
+    // BOM RECIPE INGREDIENT STOCK DEDUCTION
+    // ========================================================
+    if (tenant.restaurantRecipes && tenant.products) {
+      for (const sold of soldMenuItems) {
+        const recipe = tenant.restaurantRecipes.find((r: RestaurantRecipe) => r.menuItemId === sold.menuItemId);
+        if (recipe) {
+          for (const ing of recipe.ingredients) {
+            const rawProd = tenant.products.find((p: Product) => p.id === ing.rawMaterialProductId);
+            if (rawProd) {
+              const consumed = Number((ing.quantityNeeded * sold.quantity).toFixed(3));
+              const prev = rawProd.stockQuantity;
+              rawProd.stockQuantity = Math.max(0, Number((rawProd.stockQuantity - consumed).toFixed(3)));
+              rawProd.updatedAt = new Date().toISOString();
+
+              if (!tenant.stockMovements) tenant.stockMovements = [];
+              tenant.stockMovements.unshift({
+                id: `mov-recipe-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                tenantId,
+                productId: rawProd.id,
+                productName: rawProd.name,
+                type: 'sale',
+                quantityChange: -consumed,
+                previousStock: prev,
+                newStock: rawProd.stockQuantity,
+                reason: `Recipe Auto-Deduct: Order ${order.orderNumber} (${recipe.menuItemName} x${sold.quantity})`,
+                referenceId: order.id,
+                performedByUserId: 'system-recipe-engine',
+                performedByUserName: 'Recipe Auto-Deduction Engine',
+                createdAt: new Date().toISOString()
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // Set Table to Cleaning
+    table.status = 'cleaning';
+    table.activeOrderId = undefined;
+    table.activeKotIds = [];
+    table.currentBillTotal = 0;
+
+    this.persist();
+    return { order, table };
+  }
+
+  public saveRecipe(tenantId: string, recipe: RestaurantRecipe): RestaurantRecipe {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantRecipes) tenant.restaurantRecipes = [];
+
+    const existingIndex = tenant.restaurantRecipes.findIndex((r: RestaurantRecipe) => r.id === recipe.id || r.menuItemId === recipe.menuItemId);
+    if (existingIndex >= 0) {
+      tenant.restaurantRecipes[existingIndex] = recipe;
+    } else {
+      tenant.restaurantRecipes.push(recipe);
+    }
+
+    this.persist();
+    return recipe;
+  }
+
+  public resetTableToVacant(tenantId: string, tableId: string): RestaurantTable {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantTables) tenant.restaurantTables = [];
+
+    const table = tenant.restaurantTables.find((t: RestaurantTable) => t.id === tableId);
+    if (!table) throw new Error('Table not found');
+
+    table.status = 'vacant';
+    table.guestCount = undefined;
+    table.seatedAt = undefined;
+    table.lastKotAt = undefined;
+    table.currentBillTotal = 0;
+    table.activeOrderId = undefined;
+    table.activeKotIds = [];
+
+    this.persist();
+    return table;
   }
 }
 
