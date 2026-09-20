@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTenant } from '../../context/TenantContext';
 import { useToast } from '../../context/ToastContext';
+import { useEntitlements } from '../../hooks/useEntitlements';
 import { restaurantService } from '../../services/restaurantService';
 import type {
   RestaurantSection,
@@ -39,6 +40,7 @@ import { TableTransferModal } from './components/TableTransferModal';
 export const RestaurantTablesPage: React.FC = () => {
   const { tenant } = useTenant();
   const { showToast } = useToast();
+  const { hasFeature } = useEntitlements();
 
   const [sections, setSections] = useState<RestaurantSection[]>([]);
   const [tables, setTables] = useState<RestaurantTable[]>([]);
@@ -265,6 +267,16 @@ export const RestaurantTablesPage: React.FC = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   Live Floor
                 </span>
+                {!hasFeature('restaurant_kds') ? (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                    Starter · Direct Table Billing
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+                    <ChefHat className="w-3 h-3 text-purple-600" />
+                    Pro KDS Synced
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
                 Real-time dining room occupancy, table dwell monitoring, and synchronized KOT dispatch
@@ -739,21 +751,31 @@ export const RestaurantTablesPage: React.FC = () => {
                   )}
 
                   {(table.status === 'ordered' || table.status === 'served') && (
-                    <div className="w-full grid grid-cols-2 gap-1.5">
+                    <div className="w-full flex items-center gap-1.5">
                       <button
                         onClick={() => setOrderingTable(table)}
-                        className="py-1.5 px-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center justify-center gap-1"
+                        className="py-1.5 px-2 flex-1 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center justify-center gap-1"
+                        title="Add items to order"
                       >
                         <UtensilsCrossed className="w-3 h-3 text-orange-600" />
-                        <span>Add Items</span>
+                        <span>Items</span>
                       </button>
 
                       <button
                         onClick={() => handlePrintCheck(table)}
-                        className="py-1.5 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1"
+                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center"
+                        title="Print Guest Check"
                       >
-                        <Printer className="w-3 h-3 text-amber-400" />
-                        <span>Check</span>
+                        <Printer className="w-3.5 h-3.5 text-slate-600" />
+                      </button>
+
+                      <button
+                        onClick={() => setSettlingTable(table)}
+                        className="py-1.5 px-2.5 flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-2xs transition-colors"
+                        title="Direct Settle & Bill"
+                      >
+                        <CreditCard className="w-3 h-3" />
+                        <span>Settle</span>
                       </button>
                     </div>
                   )}

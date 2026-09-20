@@ -410,7 +410,9 @@ export const AppRoutes: React.FC = () => {
           path="/restaurant/kds"
           element={
             <RequireApplication appId="restaurant">
-              <KitchenDisplayPage />
+              <RequireFeature feature="restaurant_kds">
+                <KitchenDisplayPage />
+              </RequireFeature>
             </RequireApplication>
           }
         />

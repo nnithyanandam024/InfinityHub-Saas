@@ -11,6 +11,7 @@ export type InventoryFeature =
   | 'reports'
   | 'audit_logs'
   | 'user_roles'
+  | 'restaurant_floor_billing'
   // Professional Tier Additions
   | 'warehouses'
   | 'bin_locations'
@@ -24,6 +25,9 @@ export type InventoryFeature =
   | 'advanced_reports'
   | 'bulk_import'
   | 'automation'
+  | 'restaurant_kds'
+  | 'restaurant_recipes'
+  | 'restaurant_anti_theft'
   // Business Tier Additions
   | 'serial_numbers'
   | 'advanced_costing'

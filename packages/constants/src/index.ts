@@ -474,6 +474,34 @@ export const INVENTORY_FEATURES: Record<InventoryFeature, FeatureDefinition> = {
     category: 'business',
     description: 'Local store caching, offline transaction queuing, and conflict reconciliation.',
     minPlanTier: 'business'
+  },
+  restaurant_floor_billing: {
+    key: 'restaurant_floor_billing',
+    name: 'Floor Plan & Direct Table Billing',
+    category: 'core',
+    description: 'Visual floor plan, table seating, quick table settlement, bill splitting, and guest receipt printing.',
+    minPlanTier: 'starter'
+  },
+  restaurant_kds: {
+    key: 'restaurant_kds',
+    name: 'Kitchen Display System (KDS)',
+    category: 'professional',
+    description: 'Real-time multi-station kitchen line display, cook timers, item bump bar, and station dispatching.',
+    minPlanTier: 'professional'
+  },
+  restaurant_recipes: {
+    key: 'restaurant_recipes',
+    name: 'Recipe Costing & BOM Ingredients',
+    category: 'professional',
+    description: 'Bill of materials (BOM) recipe management with automated raw inventory deduction upon settlement.',
+    minPlanTier: 'professional'
+  },
+  restaurant_anti_theft: {
+    key: 'restaurant_anti_theft',
+    name: 'Restaurant Anti-Theft & Spoilage Audits',
+    category: 'professional',
+    description: 'Manager PIN void guards, kitchen spoilage waste ledger, and duplicate check reprint tracking.',
+    minPlanTier: 'professional'
   }
 };
 
@@ -489,7 +517,8 @@ export const DEFAULT_PLAN_ENTITLEMENTS: Record<PlanTier, InventoryFeature[]> = {
     'stocktake',
     'reports',
     'audit_logs',
-    'user_roles'
+    'user_roles',
+    'restaurant_floor_billing'
   ],
   professional: [
     // Starter features
@@ -504,6 +533,7 @@ export const DEFAULT_PLAN_ENTITLEMENTS: Record<PlanTier, InventoryFeature[]> = {
     'reports',
     'audit_logs',
     'user_roles',
+    'restaurant_floor_billing',
     // Professional features
     'warehouses',
     'bin_locations',
@@ -516,7 +546,10 @@ export const DEFAULT_PLAN_ENTITLEMENTS: Record<PlanTier, InventoryFeature[]> = {
     'forecasting',
     'advanced_reports',
     'bulk_import',
-    'automation'
+    'automation',
+    'restaurant_kds',
+    'restaurant_recipes',
+    'restaurant_anti_theft'
   ],
   business: [
     // Starter features
@@ -531,6 +564,7 @@ export const DEFAULT_PLAN_ENTITLEMENTS: Record<PlanTier, InventoryFeature[]> = {
     'reports',
     'audit_logs',
     'user_roles',
+    'restaurant_floor_billing',
     // Professional features
     'warehouses',
     'bin_locations',
@@ -544,6 +578,9 @@ export const DEFAULT_PLAN_ENTITLEMENTS: Record<PlanTier, InventoryFeature[]> = {
     'advanced_reports',
     'bulk_import',
     'automation',
+    'restaurant_kds',
+    'restaurant_recipes',
+    'restaurant_anti_theft',
     // Business features
     'serial_numbers',
     'advanced_costing',
@@ -597,7 +634,7 @@ export const SUBSCRIPTION_PLANS: Plan[] = [
       'Code128 barcode generation & labels',
       'Supplier records & purchase receipts',
       'Physical stocktake & cycle counting',
-      'Basic inventory valuation & audit trail',
+      'Floor Plan & Direct Table Billing',
       '1,000 product records & 2 user seats'
     ]
   },
@@ -616,12 +653,12 @@ export const SUBSCRIPTION_PLANS: Plan[] = [
     includedFeatures: DEFAULT_PLAN_ENTITLEMENTS.professional,
     features: [
       'Everything in Starter, plus:',
+      'Kitchen Display System (KDS) & Prep Timers',
       'Multiple warehouses & bin storage locations',
       'Inter-warehouse stock transfers & transit status',
       'Batch/lot numbers & shelf-life expiry tracking',
       'Multi-attribute product variants & composite bundles (BOM)',
       'Automated reorder suggestions & demand forecasting',
-      'CSV bulk catalog import & export',
       '10,000 product records & 5 user seats'
     ]
   },
@@ -639,6 +676,7 @@ export const SUBSCRIPTION_PLANS: Plan[] = [
     includedFeatures: DEFAULT_PLAN_ENTITLEMENTS.business,
     features: [
       'Everything in Professional, plus:',
+      'Restaurant Anti-Theft Audits & Manager PIN Voids',
       'Individual serial number / IMEI tracking',
       'Advanced stock valuation (FIFO / WAC)',
       'ABC Pareto inventory analysis & dead-stock audits',

@@ -201,6 +201,31 @@ export const CaptainOrderPadModal: React.FC<CaptainOrderPadModalProps> = ({
     }
   };
 
+  const handleFireAndSettle = async () => {
+    if (pendingItems.length > 0) {
+      setIsFiring(true);
+      try {
+        await onFireKot(
+          table.id,
+          pendingItems.map(i => ({
+            menuItemId: i.menuItemId,
+            name: i.name,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+            station: i.station,
+            selectedModifiers: i.selectedModifiers,
+            specialNotes: i.specialNotes
+          })),
+          table.assignedCaptain || 'Captain Suresh'
+        );
+        setPendingItems([]);
+      } finally {
+        setIsFiring(false);
+      }
+    }
+    onOpenSettlement();
+  };
+
   const executeVoidItem = async () => {
     if (!voidingTarget) return;
     setVoidError('');
@@ -595,16 +620,29 @@ export const CaptainOrderPadModal: React.FC<CaptainOrderPadModalProps> = ({
                 </div>
               </div>
 
-              {/* Fire KOT Action Button */}
-              <button
-                type="button"
-                disabled={pendingItems.length === 0 || isFiring}
-                onClick={handleFireKot}
-                className="w-full py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              >
-                <Flame className="w-4 h-4 text-amber-300 animate-pulse" />
-                <span>{isFiring ? 'Sending to Kitchen...' : `Fire KOT to Kitchen (${pendingItems.length})`}</span>
-              </button>
+              {/* Order Actions: Send KOT vs Direct Settle */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={pendingItems.length === 0 || isFiring}
+                  onClick={handleFireKot}
+                  className="py-3 px-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <Flame className="w-4 h-4 text-amber-300" />
+                  <span>{isFiring ? 'Sending...' : `Send KOT (${pendingItems.length})`}</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={(pendingItems.length === 0 && tableKots.length === 0) || isFiring}
+                  onClick={handleFireAndSettle}
+                  className="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  title="Save order and immediately open settlement modal for payment"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Charge & Settle</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

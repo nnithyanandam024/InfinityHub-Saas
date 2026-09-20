@@ -56,7 +56,8 @@ async function runTierVerification() {
     'stocktake',
     'reports',
     'audit_logs',
-    'user_roles'
+    'user_roles',
+    'restaurant_floor_billing'
   ] as const;
 
   for (const f of expectedStarterFeatures) {
@@ -76,7 +77,8 @@ async function runTierVerification() {
     'bulk_import',
     'serial_numbers',
     'abc_analysis',
-    'aging_deadstock'
+    'aging_deadstock',
+    'restaurant_kds'
   ] as const;
 
   for (const f of blockedInStarter) {
@@ -104,7 +106,11 @@ async function runTierVerification() {
     'forecasting',
     'advanced_reports',
     'bulk_import',
-    'automation'
+    'automation',
+    'restaurant_floor_billing',
+    'restaurant_kds',
+    'restaurant_recipes',
+    'restaurant_anti_theft'
   ] as const;
 
   for (const f of expectedProFeatures) {
