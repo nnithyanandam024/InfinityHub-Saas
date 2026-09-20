@@ -133,15 +133,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   <span className="flex-1">Floor Plan & Tables</span>
                 </NavLink>
 
-                <NavLink
-                  to="/restaurant/kds"
-                  onClick={onClose}
-                  className={({ isActive }) => getNavLinkClass(isActive)}
-                >
-                  <ChefHat className="w-4 h-4 shrink-0 text-amber-600" />
-                  <span className="flex-1">Kitchen Display (KDS)</span>
-                  <span className="text-[9px] font-mono font-bold bg-amber-100 text-amber-800 px-1 py-0.5 rounded">Live</span>
-                </NavLink>
+                {hasFeature('restaurant_kds') && (
+                  <NavLink
+                    to="/restaurant/kds"
+                    onClick={onClose}
+                    className={({ isActive }) => getNavLinkClass(isActive)}
+                  >
+                    <ChefHat className="w-4 h-4 shrink-0 text-amber-600" />
+                    <span className="flex-1">Kitchen Display (KDS)</span>
+                    <span className="text-[9px] font-mono font-bold bg-amber-100 text-amber-800 px-1 py-0.5 rounded">Live</span>
+                  </NavLink>
+                )}
 
                 <NavLink
                   to="/restaurant/recipes"
