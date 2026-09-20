@@ -24,6 +24,7 @@ export interface RestaurantTable {
   capacity: number;
   status: TableStatus;
   shape?: 'square' | 'round' | 'rectangle';
+  isActive?: boolean;
   activeOrderId?: string;
   activeKotIds?: string[];
   guestCount?: number;
@@ -186,4 +187,43 @@ export interface TableTransferAudit {
   authorizedBy: string;
   reason: string;
   itemCount: number;
+}
+
+export interface CreateRestaurantSectionPayload {
+  name: string;
+  description?: string;
+  sortOrder?: number;
+}
+
+export interface UpdateRestaurantSectionPayload {
+  name?: string;
+  description?: string;
+  sortOrder?: number;
+}
+
+export interface CreateRestaurantTablePayload {
+  sectionId: string;
+  tableNumber: string;
+  capacity: number;
+  shape?: 'square' | 'round' | 'rectangle';
+  assignedCaptain?: string;
+}
+
+export interface UpdateRestaurantTablePayload {
+  sectionId?: string;
+  tableNumber?: string;
+  capacity?: number;
+  shape?: 'square' | 'round' | 'rectangle';
+  assignedCaptain?: string;
+  status?: TableStatus;
+}
+
+export interface BatchCreateTablesPayload {
+  sectionId: string;
+  prefix: string;
+  startNumber: number;
+  count: number;
+  capacity: number;
+  shape: 'square' | 'round' | 'rectangle';
+  assignedCaptain?: string;
 }

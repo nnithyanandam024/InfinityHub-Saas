@@ -56,6 +56,7 @@ import { RestaurantTablesPage } from '../pages/restaurant/RestaurantTablesPage';
 import { KitchenDisplayPage } from '../pages/restaurant/KitchenDisplayPage';
 import { RestaurantRecipesPage } from '../pages/restaurant/RestaurantRecipesPage';
 import { RestaurantAuditPage } from '../pages/restaurant/RestaurantAuditPage';
+import { RestaurantFloorSettingsPage } from '../pages/restaurant/RestaurantFloorSettingsPage';
 
 // Placeholder Workspaces for Other Standalone Products
 import { PosWorkspacePlaceholder } from '../pages/placeholders/PosWorkspacePlaceholder';
@@ -426,6 +427,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <RequireApplication appId="restaurant">
               <RestaurantAuditPage />
+            </RequireApplication>
+          }
+        />
+        <Route
+          path="/restaurant/floor-settings"
+          element={
+            <RequireApplication appId="restaurant">
+              <RestaurantFloorSettingsPage />
             </RequireApplication>
           }
         />

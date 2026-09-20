@@ -31,7 +31,8 @@ import {
   UtensilsCrossed,
   ChefHat,
   CookingPot,
-  ShieldAlert
+  ShieldAlert,
+  SlidersHorizontal
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -158,6 +159,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 >
                   <ShieldAlert className="w-4 h-4 shrink-0 text-rose-600" />
                   <span>Anti-Theft Audits</span>
+                </NavLink>
+
+                <NavLink
+                  to="/restaurant/floor-settings"
+                  onClick={onClose}
+                  className={({ isActive }) => getNavLinkClass(isActive)}
+                >
+                  <SlidersHorizontal className="w-4 h-4 shrink-0 text-indigo-600" />
+                  <span>Floor & Table Config</span>
                 </NavLink>
 
                 <NavLink
@@ -494,6 +504,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <UserCog className="w-4 h-4 shrink-0" />
                 <span>Cashiers & Roles</span>
               </NavLink>
+
+              {isRestaurantApp && (
+                <NavLink
+                  to="/restaurant/floor-settings"
+                  onClick={onClose}
+                  className={({ isActive }) => getNavLinkClass(isActive)}
+                >
+                  <SlidersHorizontal className="w-4 h-4 shrink-0 text-indigo-500" />
+                  <span>Floor & Tables Settings</span>
+                </NavLink>
+              )}
             </nav>
           </div>
         </div>

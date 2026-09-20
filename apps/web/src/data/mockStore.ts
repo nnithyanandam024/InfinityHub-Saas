@@ -34,7 +34,12 @@ import {
   RestaurantRecipe,
   RestaurantWasteLog,
   TableTransferAudit,
-  KotItemStatus
+  KotItemStatus,
+  CreateRestaurantSectionPayload,
+  UpdateRestaurantSectionPayload,
+  CreateRestaurantTablePayload,
+  UpdateRestaurantTablePayload,
+  BatchCreateTablesPayload
 } from '@infinityhub/types';
 import { BulkImportRowData } from '@infinityhub/validation';
 import { INITIAL_TENANTS_MAP, MOCK_PLANS, MOCK_SUPER_ADMIN_USER, TenantData } from './initialData';
@@ -2794,6 +2799,186 @@ class MockDataStore {
 
     this.persist();
     return table;
+  }
+
+  // ==========================================================
+  // FLOOR & TABLE CONFIGURATION (Sections & Tables CRUD)
+  // ==========================================================
+
+  public createRestaurantSection(
+    tenantId: string,
+    payload: CreateRestaurantSectionPayload
+  ): RestaurantSection {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantSections) tenant.restaurantSections = [];
+
+    const newSection: RestaurantSection = {
+      id: `sec-${Date.now()}`,
+      name: payload.name.trim(),
+      description: payload.description?.trim() || '',
+      sortOrder: payload.sortOrder || tenant.restaurantSections.length + 1
+    };
+
+    tenant.restaurantSections.push(newSection);
+    this.persist();
+    return newSection;
+  }
+
+  public updateRestaurantSection(
+    tenantId: string,
+    sectionId: string,
+    payload: UpdateRestaurantSectionPayload
+  ): RestaurantSection {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantSections) tenant.restaurantSections = [];
+
+    const section = tenant.restaurantSections.find((s: RestaurantSection) => s.id === sectionId);
+    if (!section) throw new Error('Dining section not found');
+
+    if (payload.name !== undefined) section.name = payload.name.trim();
+    if (payload.description !== undefined) section.description = payload.description.trim();
+    if (payload.sortOrder !== undefined) section.sortOrder = payload.sortOrder;
+
+    this.persist();
+    return section;
+  }
+
+  public deleteRestaurantSection(tenantId: string, sectionId: string): void {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantSections) tenant.restaurantSections = [];
+    if (!tenant.restaurantTables) tenant.restaurantTables = [];
+
+    const section = tenant.restaurantSections.find((s: RestaurantSection) => s.id === sectionId);
+    if (!section) throw new Error('Dining section not found');
+
+    // Safety guard: cannot delete if tables are assigned to this section
+    const assignedTables = tenant.restaurantTables.filter(
+      (t: RestaurantTable) => t.sectionId === sectionId
+    );
+    if (assignedTables.length > 0) {
+      throw new Error(`Cannot delete section "${section.name}" because it contains ${assignedTables.length} table(s). Please delete or reassign them to another section first.`);
+    }
+
+    tenant.restaurantSections = tenant.restaurantSections.filter((s: RestaurantSection) => s.id !== sectionId);
+    this.persist();
+  }
+
+  public createRestaurantTable(
+    tenantId: string,
+    payload: CreateRestaurantTablePayload
+  ): RestaurantTable {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantTables) tenant.restaurantTables = [];
+
+    const normalizedNumber = payload.tableNumber.trim().toUpperCase();
+    const existing = tenant.restaurantTables.find(
+      (t: RestaurantTable) => t.tableNumber.toUpperCase() === normalizedNumber
+    );
+    if (existing) {
+      throw new Error(`Table number "${payload.tableNumber}" is already in use.`);
+    }
+
+    const newTable: RestaurantTable = {
+      id: `tbl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      sectionId: payload.sectionId,
+      tableNumber: normalizedNumber,
+      capacity: Math.max(1, payload.capacity || 4),
+      status: 'vacant',
+      shape: payload.shape || 'square',
+      assignedCaptain: payload.assignedCaptain?.trim() || undefined,
+      currentBillTotal: 0,
+      activeKotIds: []
+    };
+
+    tenant.restaurantTables.push(newTable);
+    this.persist();
+    return newTable;
+  }
+
+  public updateRestaurantTable(
+    tenantId: string,
+    tableId: string,
+    payload: UpdateRestaurantTablePayload
+  ): RestaurantTable {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantTables) tenant.restaurantTables = [];
+
+    const table = tenant.restaurantTables.find((t: RestaurantTable) => t.id === tableId);
+    if (!table) throw new Error('Table not found');
+
+    if (payload.tableNumber !== undefined) {
+      const normalized = payload.tableNumber.trim().toUpperCase();
+      const duplicate = tenant.restaurantTables.find(
+        (t: RestaurantTable) => t.id !== tableId && t.tableNumber.toUpperCase() === normalized
+      );
+      if (duplicate) {
+        throw new Error(`Table number "${payload.tableNumber}" is already in use by another table.`);
+      }
+      table.tableNumber = normalized;
+    }
+
+    if (payload.sectionId !== undefined) table.sectionId = payload.sectionId;
+    if (payload.capacity !== undefined) table.capacity = Math.max(1, payload.capacity);
+    if (payload.shape !== undefined) table.shape = payload.shape;
+    if (payload.assignedCaptain !== undefined) table.assignedCaptain = payload.assignedCaptain.trim() || undefined;
+    if (payload.status !== undefined) table.status = payload.status;
+
+    this.persist();
+    return table;
+  }
+
+  public deleteRestaurantTable(tenantId: string, tableId: string): void {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantTables) tenant.restaurantTables = [];
+
+    const table = tenant.restaurantTables.find((t: RestaurantTable) => t.id === tableId);
+    if (!table) throw new Error('Table not found');
+
+    if (table.status !== 'vacant' && table.status !== 'cleaning') {
+      throw new Error(`Cannot delete Table ${table.tableNumber} while it is occupied (${table.status}). Please settle or transfer the table first.`);
+    }
+
+    tenant.restaurantTables = tenant.restaurantTables.filter((t: RestaurantTable) => t.id !== tableId);
+    this.persist();
+  }
+
+  public batchCreateRestaurantTables(
+    tenantId: string,
+    payload: BatchCreateTablesPayload
+  ): RestaurantTable[] {
+    const tenant = this.getTenantData(tenantId);
+    if (!tenant.restaurantTables) tenant.restaurantTables = [];
+
+    const created: RestaurantTable[] = [];
+    const prefix = (payload.prefix || 'T-').trim().toUpperCase();
+
+    for (let i = 0; i < payload.count; i++) {
+      const num = payload.startNumber + i;
+      const tableNumber = `${prefix}${num < 10 ? '0' + num : num}`;
+
+      // Skip if already exists
+      if (tenant.restaurantTables.some((t: RestaurantTable) => t.tableNumber.toUpperCase() === tableNumber)) {
+        continue;
+      }
+
+      const newTable: RestaurantTable = {
+        id: `tbl-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+        sectionId: payload.sectionId,
+        tableNumber,
+        capacity: Math.max(1, payload.capacity || 4),
+        status: 'vacant',
+        shape: payload.shape || 'square',
+        assignedCaptain: payload.assignedCaptain?.trim() || undefined,
+        currentBillTotal: 0,
+        activeKotIds: []
+      };
+
+      tenant.restaurantTables.push(newTable);
+      created.push(newTable);
+    }
+
+    this.persist();
+    return created;
   }
 }
 

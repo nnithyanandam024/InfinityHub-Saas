@@ -134,5 +134,33 @@ export const restaurantService = {
 
   async saveRecipe(tenantId: string, recipe: RestaurantRecipe): Promise<RestaurantRecipe> {
     return mockStore.saveRecipe(tenantId, recipe);
+  },
+
+  async createSection(tenantId: string, payload: any): Promise<RestaurantSection> {
+    return mockStore.createRestaurantSection(tenantId, payload);
+  },
+
+  async updateSection(tenantId: string, sectionId: string, payload: any): Promise<RestaurantSection> {
+    return mockStore.updateRestaurantSection(tenantId, sectionId, payload);
+  },
+
+  async deleteSection(tenantId: string, sectionId: string): Promise<void> {
+    return mockStore.deleteRestaurantSection(tenantId, sectionId);
+  },
+
+  async createTable(tenantId: string, payload: any): Promise<RestaurantTable> {
+    return mockStore.createRestaurantTable(tenantId, payload);
+  },
+
+  async updateTable(tenantId: string, tableId: string, payload: any): Promise<RestaurantTable> {
+    return mockStore.updateRestaurantTable(tenantId, tableId, payload);
+  },
+
+  async deleteTable(tenantId: string, tableId: string): Promise<void> {
+    return mockStore.deleteRestaurantTable(tenantId, tableId);
+  },
+
+  async batchCreateTables(tenantId: string, payload: any): Promise<RestaurantTable[]> {
+    return mockStore.batchCreateRestaurantTables(tenantId, payload);
   }
 };
