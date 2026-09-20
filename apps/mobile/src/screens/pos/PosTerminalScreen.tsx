@@ -147,7 +147,7 @@ export const PosTerminalScreen: React.FC<{ navigation: any }> = ({ navigation })
               style={styles.shiftBadge}
               onPress={() => setIsShiftModalOpen(true)}
             >
-              <Text style={styles.shiftDot}>{currentShift ? '🟢' : '🔴'}</Text>
+              <View style={[styles.shiftDot, currentShift ? styles.shiftDotOpen : styles.shiftDotClosed]} />
               <Text style={styles.shiftLabel}>
                 {currentShift ? `Shift #${currentShift.id.slice(-4)}` : 'Shift Closed'}
               </Text>
@@ -452,8 +452,16 @@ const styles = StyleSheet.create({
     borderRadius: 8
   },
   shiftDot: {
-    fontSize: 10,
-    marginRight: 4
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6
+  },
+  shiftDotOpen: {
+    backgroundColor: theme.colors.successText
+  },
+  shiftDotClosed: {
+    backgroundColor: theme.colors.dangerText
   },
   shiftLabel: {
     fontSize: 11,

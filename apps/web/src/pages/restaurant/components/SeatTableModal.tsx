@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RestaurantTable } from '@infinityhub/types';
-import { Users, UserCheck, X } from 'lucide-react';
+import { Users, UserCheck, X, AlertCircle } from 'lucide-react';
 
 interface SeatTableModalProps {
   isOpen: boolean;
@@ -96,8 +96,9 @@ export const SeatTableModal: React.FC<SeatTableModalProps> = ({
               </div>
             </div>
             {guestCount > table.capacity && (
-              <p className="text-[11px] text-amber-600 font-medium mt-1">
-                ⚠️ Guest count exceeds standard table capacity ({table.capacity} seats). Extra chairs needed.
+              <p className="text-[11px] text-amber-600 font-medium mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>Guest count exceeds standard table capacity ({table.capacity} seats). Extra chairs needed.</span>
               </p>
             )}
           </div>

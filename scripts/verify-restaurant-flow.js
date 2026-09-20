@@ -12,13 +12,13 @@ function logStep(step, desc) {
 }
 function assert(condition, message) {
     if (!condition) {
-        console.error(`❌ ASSERTION FAILED: ${message}`);
+        console.error(`[FAIL] ASSERTION FAILED: ${message}`);
         process.exit(1);
     }
-    console.log(`  ✅ ${message}`);
+    console.log(`  [PASS] ${message}`);
 }
 async function run() {
-    console.log('🚀 Starting Restaurant Management E2E Flow Verification...\n');
+    console.log('[START] Starting Restaurant Management E2E Flow Verification...\n');
     // Reset store to fresh state
     mockStore.resetAll();
     // -------------------------------------------------------------
@@ -239,7 +239,7 @@ async function run() {
     // -------------------------------------------------------------
     const finalTable = mockStore.resetTableToVacant(TENANT_ID, tableT06.id);
     assert(finalTable.status === 'vacant', 'Table T-06 reset to "vacant" ready for next dining party');
-    console.log('\n🎉 ALL RESTAURANT MANAGEMENT VERIFICATION TESTS PASSED SUCCESSFULLY! 🥂\n');
+    console.log('\n[SUCCESS] ALL RESTAURANT MANAGEMENT VERIFICATION TESTS PASSED SUCCESSFULLY! \n');
 }
 run().catch(err => {
     console.error('Test execution failed:', err);

@@ -28,11 +28,11 @@ const results = [];
 function assert(condition, suite, name, details) {
     if (condition) {
         results.push({ suite, name, passed: true, details });
-        console.log(`  ✓ [${suite}] ${name}`);
+        console.log(`   [${suite}] ${name}`);
     }
     else {
         results.push({ suite, name, passed: false, error: 'Assertion failed', details });
-        console.error(`  ✗ [${suite}] ${name} - FAILED`);
+        console.error(`   [${suite}] ${name} - FAILED`);
     }
 }
 async function runSuite() {

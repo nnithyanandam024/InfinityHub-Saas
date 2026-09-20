@@ -157,7 +157,7 @@ export const MobilePaymentModal: React.FC<MobilePaymentModalProps> = ({
               onPress={() => setSelectedMethod('cash')}
             >
               <View style={[styles.methodIconWrap, selectedMethod === 'cash' && styles.methodIconWrapActive]}>
-                <Text style={styles.methodEmoji}>💵</Text>
+                <Icon name="cash" size={20} color={selectedMethod === 'cash' ? '#FFFFFF' : theme.colors.navy} />
               </View>
               <Text style={[styles.methodName, selectedMethod === 'cash' && styles.methodNameActive]}>Cash</Text>
             </TouchableOpacity>
@@ -167,7 +167,7 @@ export const MobilePaymentModal: React.FC<MobilePaymentModalProps> = ({
               onPress={() => setSelectedMethod('upi')}
             >
               <View style={[styles.methodIconWrap, selectedMethod === 'upi' && styles.methodIconWrapActive]}>
-                <Text style={styles.methodEmoji}>📱</Text>
+                <Icon name="smartphone" size={20} color={selectedMethod === 'upi' ? '#FFFFFF' : theme.colors.navy} />
               </View>
               <Text style={[styles.methodName, selectedMethod === 'upi' && styles.methodNameActive]}>UPI QR</Text>
             </TouchableOpacity>
@@ -177,7 +177,7 @@ export const MobilePaymentModal: React.FC<MobilePaymentModalProps> = ({
               onPress={() => setSelectedMethod('card')}
             >
               <View style={[styles.methodIconWrap, selectedMethod === 'card' && styles.methodIconWrapActive]}>
-                <Text style={styles.methodEmoji}>💳</Text>
+                <Icon name="creditCard" size={20} color={selectedMethod === 'card' ? '#FFFFFF' : theme.colors.navy} />
               </View>
               <Text style={[styles.methodName, selectedMethod === 'card' && styles.methodNameActive]}>Card / POS</Text>
             </TouchableOpacity>
@@ -187,7 +187,7 @@ export const MobilePaymentModal: React.FC<MobilePaymentModalProps> = ({
               onPress={() => setSelectedMethod('credit_khata')}
             >
               <View style={[styles.methodIconWrap, selectedMethod === 'credit_khata' && styles.methodIconWrapActive]}>
-                <Text style={styles.methodEmoji}>📒</Text>
+                <Icon name="book" size={20} color={selectedMethod === 'credit_khata' ? '#FFFFFF' : theme.colors.navy} />
               </View>
               <Text style={[styles.methodName, selectedMethod === 'credit_khata' && styles.methodNameActive]}>Khata</Text>
             </TouchableOpacity>

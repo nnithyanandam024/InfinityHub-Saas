@@ -19,13 +19,13 @@ const results = [];
 function assert(condition, suite, test, details) {
     if (condition) {
         results.push({ suite, test, passed: true, details });
-        console.log(`  ✓ [${suite}] ${test}`);
+        console.log(`   [${suite}] ${test}`);
         if (details)
             console.log(`      ↳ ${details}`);
     }
     else {
         results.push({ suite, test, passed: false, error: 'Assertion failed', details });
-        console.error(`  ✗ [${suite}] ${test} - FAILED!`);
+        console.error(`   [${suite}] ${test} - FAILED!`);
         if (details)
             console.error(`      ↳ ${details}`);
     }

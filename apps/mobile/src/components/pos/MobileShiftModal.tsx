@@ -76,7 +76,7 @@ export const MobileShiftModal: React.FC<MobileShiftModalProps> = ({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={[styles.iconCircle, mode === 'open' ? styles.iconOpen : styles.iconClose]}>
-                <Text style={styles.headerEmoji}>{mode === 'open' ? '🟢' : '🔴'}</Text>
+                <View style={[styles.statusDot, mode === 'open' ? styles.statusDotOpen : styles.statusDotClose]} />
               </View>
               <View>
                 <Text style={styles.title}>
@@ -202,8 +202,16 @@ const styles = StyleSheet.create({
   iconClose: {
     backgroundColor: '#FEF2F2'
   },
-  headerEmoji: {
-    fontSize: 18
+  statusDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7
+  },
+  statusDotOpen: {
+    backgroundColor: theme.colors.successText
+  },
+  statusDotClose: {
+    backgroundColor: theme.colors.dangerText
   },
   title: {
     ...theme.typography.bodyBold,

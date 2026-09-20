@@ -18,14 +18,14 @@ function logStep(step: string, desc: string) {
 
 function assert(condition: boolean, message: string) {
   if (!condition) {
-    console.error(`❌ ASSERTION FAILED: ${message}`);
+    console.error(`[FAIL] ASSERTION FAILED: ${message}`);
     process.exit(1);
   }
-  console.log(`  ✅ ${message}`);
+  console.log(`  [PASS] ${message}`);
 }
 
 async function run() {
-  console.log('🚀 Starting Comprehensive Restaurant Multi-Tier CRUD & Logic Verification...\n');
+  console.log('[START] Starting Comprehensive Restaurant Multi-Tier CRUD & Logic Verification...\n');
 
   mockStore.resetAll();
 
@@ -398,7 +398,7 @@ async function run() {
   const tableAfterFinalSettle = mockStore.getRestaurantTables(BIZ_TENANT).find(t => t.id === refreshedTarget.id)!;
   assert(tableAfterFinalSettle.status === 'cleaning', 'Business table settled and marked for cleaning');
 
-  console.log('\n🎉 ALL MULTI-TIER CRUD & RESTAURANT LOGIC CHECKS PASSED WITH ZERO ERRORS!\n');
+  console.log('\n[SUCCESS] ALL MULTI-TIER CRUD & RESTAURANT LOGIC CHECKS PASSED WITH ZERO ERRORS!\n');
 }
 
 run().catch((err) => {

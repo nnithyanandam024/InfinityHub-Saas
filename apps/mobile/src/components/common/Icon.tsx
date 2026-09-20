@@ -28,6 +28,9 @@ export type IconName =
   | 'receipt'
   | 'wallet'
   | 'cash'
+  | 'smartphone'
+  | 'creditCard'
+  | 'book'
   | 'utensils'
   | 'table'
   | 'chefHat'
@@ -395,6 +398,39 @@ export const Icon: React.FC<IconProps> = ({
         <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
           <View style={{ width: s * 0.88, height: s * 0.58, borderWidth: 1.8, borderColor: color, borderRadius: 3, alignItems: 'center', justifyContent: 'center' }}>
             <View style={{ width: 5, height: 5, borderRadius: 2.5, borderWidth: 1.5, borderColor: color }} />
+          </View>
+        </View>
+      );
+
+    case 'smartphone':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          <View style={{ width: s * 0.58, height: s * 0.88, borderRadius: 3, borderWidth: 1.8, borderColor: color, alignItems: 'center', justifyContent: 'space-between', paddingVertical: 2 }}>
+            <View style={{ width: s * 0.22, height: 1.5, backgroundColor: color, borderRadius: 1 }} />
+            <View style={{ width: s * 0.16, height: 1.5, backgroundColor: color, borderRadius: 1 }} />
+          </View>
+        </View>
+      );
+
+    case 'creditCard':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          <View style={{ width: s * 0.88, height: s * 0.62, borderRadius: 2.5, borderWidth: 1.8, borderColor: color, justifyContent: 'space-between', paddingVertical: 2 }}>
+            <View style={{ width: '100%', height: s * 0.12, backgroundColor: color }} />
+            <View style={{ width: s * 0.25, height: 2, backgroundColor: color, marginLeft: 2, borderRadius: 0.5 }} />
+          </View>
+        </View>
+      );
+
+    case 'book':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          <View style={{ width: s * 0.72, height: s * 0.85, borderRadius: 2, borderWidth: 1.8, borderColor: color, flexDirection: 'row' }}>
+            <View style={{ width: 2.5, height: '100%', backgroundColor: color }} />
+            <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 2, gap: 2 }}>
+              <View style={{ width: '70%', height: 1.2, backgroundColor: color }} />
+              <View style={{ width: '50%', height: 1.2, backgroundColor: color }} />
+            </View>
           </View>
         </View>
       );

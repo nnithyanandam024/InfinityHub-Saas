@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, ArrowLeft, Lock, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Lock, CheckCircle2, X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -18,20 +18,19 @@ export const ScopeBoundaryPage: React.FC<{ type?: 'super_admin_blocked' | 'tenan
             <ShieldAlert className="w-6 h-6" />
           </div>
           <span className="text-[11px] font-bold uppercase tracking-wider text-rose-700 bg-rose-200/60 px-2.5 py-0.5 rounded-full">
-            Access Restricted
+            Security Policy Violation
           </span>
-          <h2 className="text-lg font-bold text-slate-900 mt-2">
-            Customer Store Private Space
-          </h2>
-          <p className="text-xs text-slate-600 mt-1">
-            Platform administrators manage tenancy and subscriptions; customer store records are private to the business.
+          <h2 className="text-xl font-black text-slate-900 mt-2">Zero-Trust Boundary Enforced</h2>
+          <p className="text-xs text-rose-800/80 mt-1 max-w-sm mx-auto">
+            Super Administrators cannot inspect, modify, or interact with private customer business operational records.
           </p>
         </div>
 
-        {/* Boundary Rules */}
+        {/* Content */}
         <div className="p-6 space-y-4 text-xs">
-          <div>
-            <span className="font-bold text-slate-900 block mb-1">
+          <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-3 text-amber-900 space-y-1">
+            <span className="font-bold flex items-center gap-1.5 text-amber-800">
+              <Lock className="w-3.5 h-3.5" />
               Active Identity: <span className="font-mono text-blue-600">{role}</span> (Platform Scope)
             </span>
             <p className="text-slate-500 leading-relaxed">
@@ -45,22 +44,22 @@ export const ScopeBoundaryPage: React.FC<{ type?: 'super_admin_blocked' | 'tenan
             </span>
             <div className="grid grid-cols-2 gap-1.5 text-slate-600 text-[11px]">
               <div className="flex items-center gap-1.5">
-                <span className="text-rose-500 font-bold">✕</span> Customer Products
+                <X className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" /> Customer Products
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-rose-500 font-bold">✕</span> Inventory Stock Records
+                <X className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" /> Inventory Stock Records
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-rose-500 font-bold">✕</span> Purchase Invoices
+                <X className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" /> Purchase Invoices
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-rose-500 font-bold">✕</span> Supplier Contracts
+                <X className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" /> Supplier Contracts
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-rose-500 font-bold">✕</span> Financial Reports
+                <X className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" /> Financial Reports
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-rose-500 font-bold">✕</span> Store Private Settings
+                <X className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" /> Store Private Settings
               </div>
             </div>
           </div>

@@ -34,7 +34,14 @@ import {
   UploadCloud,
   FileImage,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  Camera,
+  MessageSquare,
+  Settings as SettingsIcon,
+  Phone,
+  Globe,
+  Folder,
+  Mail
 } from 'lucide-react';
 
 const CURRENCY_OPTIONS = [
@@ -70,27 +77,27 @@ const PRESET_LOGOS = [
   {
     name: 'Supermarket & Retail',
     url: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=200&auto=format&fit=crop&q=80',
-    icon: '🛒'
+    category: 'Retail'
   },
   {
     name: 'Hardware & Tools',
     url: 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=200&auto=format&fit=crop&q=80',
-    icon: '🔧'
+    category: 'Hardware'
   },
   {
     name: 'Electronics & Tech',
     url: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=200&auto=format&fit=crop&q=80',
-    icon: '⚡'
+    category: 'Tech'
   },
   {
     name: 'Organic & Grocery',
     url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&auto=format&fit=crop&q=80',
-    icon: '🌿'
+    category: 'Grocery'
   },
   {
-    name: 'Modern Emblem (∞)',
+    name: 'Modern Emblem',
     url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&auto=format&fit=crop&q=80',
-    icon: '💎'
+    category: 'Emblem'
   }
 ];
 
@@ -932,7 +939,7 @@ export const BusinessSettingsPage: React.FC = () => {
                                   : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                               }`}
                             >
-                              <span>{pre.icon}</span>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{pre.category}</span>
                               <span>{pre.name}</span>
                             </button>
                           ))}
@@ -1275,19 +1282,19 @@ export const BusinessSettingsPage: React.FC = () => {
                         {/* Standard Companion Icons for realism */}
                         <div className="flex flex-col items-center opacity-40">
                           <div className="w-12 h-12 rounded-[14px] bg-slate-800 flex items-center justify-center text-white text-xs">
-                            📷
+                            <Camera className="w-5 h-5 text-slate-300" />
                           </div>
                           <span className="text-[9px] text-white/70 mt-1.5">Camera</span>
                         </div>
                         <div className="flex flex-col items-center opacity-40">
                           <div className="w-12 h-12 rounded-[14px] bg-slate-800 flex items-center justify-center text-white text-xs">
-                            💬
+                            <MessageSquare className="w-5 h-5 text-slate-300" />
                           </div>
                           <span className="text-[9px] text-white/70 mt-1.5">Messages</span>
                         </div>
                         <div className="flex flex-col items-center opacity-40">
                           <div className="w-12 h-12 rounded-[14px] bg-slate-800 flex items-center justify-center text-white text-xs">
-                            ⚙️
+                            <SettingsIcon className="w-5 h-5 text-slate-300" />
                           </div>
                           <span className="text-[9px] text-white/70 mt-1.5">Settings</span>
                         </div>
@@ -1295,10 +1302,10 @@ export const BusinessSettingsPage: React.FC = () => {
 
                       {/* Dock */}
                       <div className="p-2.5 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-around">
-                        <span className="text-xs">📞</span>
-                        <span className="text-xs">🌐</span>
-                        <span className="text-xs">📁</span>
-                        <span className="text-xs">✉️</span>
+                        <Phone className="w-4 h-4 text-white/80" />
+                        <Globe className="w-4 h-4 text-white/80" />
+                        <Folder className="w-4 h-4 text-white/80" />
+                        <Mail className="w-4 h-4 text-white/80" />
                       </div>
                     </div>
                   ) : (

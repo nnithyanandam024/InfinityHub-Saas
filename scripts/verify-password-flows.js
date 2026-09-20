@@ -6,17 +6,17 @@ let testsPassed = 0;
 let testsFailed = 0;
 function assert(condition, testName) {
     if (condition) {
-        console.log(`  ✅ PASS: ${testName}`);
+        console.log(`  [PASS] PASS: ${testName}`);
         testsPassed++;
     }
     else {
-        console.error(`  ❌ FAIL: ${testName}`);
+        console.error(`  [FAIL] FAIL: ${testName}`);
         testsFailed++;
     }
 }
 async function runTests() {
     console.log('====================================================');
-    console.log('🧪 VERIFYING PASSWORD SECURITY & LIFECYCLE FLOWS');
+    console.log(' VERIFYING PASSWORD SECURITY & LIFECYCLE FLOWS');
     console.log('====================================================\n');
     // Test Suite 1: Login Verification
     console.log('1. Password Verification at Login:');

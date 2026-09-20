@@ -350,10 +350,10 @@ export const RestaurantMenuPage: React.FC = () => {
               className="px-3 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-700 font-semibold outline-hidden focus:bg-white focus:border-orange-500"
             >
               <option value="all">All Dietary</option>
-              <option value="veg">Vegetarian (🌱)</option>
-              <option value="non_veg">Non-Vegetarian (🍗)</option>
-              <option value="vegan">Vegan (🌿)</option>
-              <option value="egg">Egg (🥚)</option>
+              <option value="veg">Vegetarian (Veg)</option>
+              <option value="non_veg">Non-Vegetarian (Non-Veg)</option>
+              <option value="vegan">Vegan</option>
+              <option value="egg">Egg</option>
             </select>
 
             {/* Station Filter */}
@@ -602,10 +602,10 @@ export const RestaurantMenuPage: React.FC = () => {
                     onChange={e => setFormData({ ...formData, dietary: e.target.value as DietaryType })}
                     className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-orange-500 outline-hidden"
                   >
-                    <option value="veg">Vegetarian (🌱)</option>
-                    <option value="non_veg">Non-Vegetarian (🍗)</option>
-                    <option value="vegan">Vegan (🌿)</option>
-                    <option value="egg">Contains Egg (🥚)</option>
+                    <option value="veg">Vegetarian (Veg)</option>
+                    <option value="non_veg">Non-Vegetarian (Non-Veg)</option>
+                    <option value="vegan">Vegan</option>
+                    <option value="egg">Contains Egg</option>
                   </select>
                 </div>
 

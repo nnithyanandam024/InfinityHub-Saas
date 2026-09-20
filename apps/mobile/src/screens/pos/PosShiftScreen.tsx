@@ -57,7 +57,7 @@ export const PosShiftScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         <View style={[styles.statusCard, currentShift ? styles.statusCardOpen : styles.statusCardClosed]}>
           <View style={styles.statusRow}>
             <View style={styles.statusIconCircle}>
-              <Text style={styles.statusEmoji}>{currentShift ? '🟢' : '🔴'}</Text>
+              <View style={[styles.statusDot, currentShift ? styles.statusDotOpen : styles.statusDotClosed]} />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.shiftCardTitle}>
@@ -261,8 +261,16 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2
   },
-  statusEmoji: {
-    fontSize: 20
+  statusDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7
+  },
+  statusDotOpen: {
+    backgroundColor: theme.colors.successText
+  },
+  statusDotClosed: {
+    backgroundColor: theme.colors.dangerText
   },
   shiftCardTitle: {
     fontSize: 15,

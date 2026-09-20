@@ -773,8 +773,9 @@ export const CaptainOrderPadModal: React.FC<CaptainOrderPadModalProps> = ({
                 </div>
               </div>
 
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800">
-                ⚠️ Canceled dishes are permanently logged into the <strong>Kitchen Spoilage & Waste Ledger</strong> to prevent unauthorized cash pocketing.
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span>Canceled dishes are permanently logged into the <strong>Kitchen Spoilage & Waste Ledger</strong> to prevent unauthorized cash pocketing.</span>
               </div>
 
               <div>

@@ -39,10 +39,10 @@ const results: TestResult[] = [];
 function assert(condition: boolean, suite: string, name: string, details?: string) {
   if (condition) {
     results.push({ suite, name, passed: true, details });
-    console.log(`  ✓ [${suite}] ${name}`);
+    console.log(`   [${suite}] ${name}`);
   } else {
     results.push({ suite, name, passed: false, error: 'Assertion failed', details });
-    console.error(`  ✗ [${suite}] ${name} - FAILED`);
+    console.error(`   [${suite}] ${name} - FAILED`);
   }
 }
 

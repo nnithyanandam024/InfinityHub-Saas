@@ -41,8 +41,8 @@ InfinityHub enforces **strict cryptographic and logical segregation between the 
 
 | Domain | Scope | Accessible Resources | Restricted Resources |
 |---|---|---|---|
-| **Platform Scope** | `SUPER_ADMIN` | Tenants directory, account status (Active/Suspended), plan configurations, applications catalog, subscription expiration dates, usage/quota telemetry | ❌ Customer products<br>❌ Inventory stock records<br>❌ Purchases & invoices<br>❌ Suppliers & contacts<br>❌ Financial & valuation reports<br>❌ Customer store files |
-| **Tenant Scope** | `TENANT_OWNER`<br>`MANAGER`<br>`STAFF` | Tenant private catalog, SKU definitions, real-time on-hand stock, suppliers, purchase receipts, store settings, team accounts, and valuation reports | ❌ Platform admin console<br>❌ Cross-tenant accounts<br>❌ Global billing & application catalogs |
+| **Platform Scope** | `SUPER_ADMIN` | Tenants directory, account status (Active/Suspended), plan configurations, applications catalog, subscription expiration dates, usage/quota telemetry | [Restricted] Customer products<br>[Restricted] Inventory stock records<br>[Restricted] Purchases & invoices<br>[Restricted] Suppliers & contacts<br>[Restricted] Financial & valuation reports<br>[Restricted] Customer store files |
+| **Tenant Scope** | `TENANT_OWNER`<br>`MANAGER`<br>`STAFF` | Tenant private catalog, SKU definitions, real-time on-hand stock, suppliers, purchase receipts, store settings, team accounts, and valuation reports | [Restricted] Platform admin console<br>[Restricted] Cross-tenant accounts<br>[Restricted] Global billing & application catalogs |
 
 ---
 

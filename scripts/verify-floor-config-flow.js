@@ -11,13 +11,13 @@ function logStep(step, desc) {
 }
 function assert(condition, message) {
     if (!condition) {
-        console.error(`❌ ASSERTION FAILED: ${message}`);
+        console.error(`[FAIL] ASSERTION FAILED: ${message}`);
         process.exit(1);
     }
-    console.log(`  ✅ ${message}`);
+    console.log(`  [PASS] ${message}`);
 }
 async function run() {
-    console.log('🚀 Starting Floor & Table Configuration Flow Verification...\n');
+    console.log('[START] Starting Floor & Table Configuration Flow Verification...\n');
     // Reset store to fresh state
     mockStore.resetAll();
     // -------------------------------------------------------------
@@ -145,7 +145,7 @@ async function run() {
         console.log(`  Expected Protection: ${err.message}`);
     }
     assert(dupPrevented, 'Prevented creation of duplicate table number VIP-01');
-    console.log('\n🎉 ALL FLOOR & TABLE CONFIGURATION FLOW TESTS PASSED! 🥂\n');
+    console.log('\n[SUCCESS] ALL FLOOR & TABLE CONFIGURATION FLOW TESTS PASSED! \n');
 }
 run().catch(err => {
     console.error('Test execution failed:', err);
