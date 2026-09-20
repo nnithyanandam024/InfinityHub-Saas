@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useTenant } from '../../context/TenantContext';
 import { useToast } from '../../context/ToastContext';
 import { restaurantService } from '../../services/restaurantService';
@@ -24,7 +23,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   ArrowRightLeft,
-  SlidersHorizontal,
   LayoutGrid,
   Square,
   Circle,
@@ -303,16 +301,6 @@ export const RestaurantTablesPage: React.FC = () => {
                 <span>Cards</span>
               </button>
             </div>
-
-            {/* Link to Dedicated Config Page */}
-            <Link
-              to="/restaurant/floor-settings"
-              className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all"
-              title="Edit floor layout, add tables and dining sections"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Floor & Table Config</span>
-            </Link>
 
             <button
               onClick={loadData}
