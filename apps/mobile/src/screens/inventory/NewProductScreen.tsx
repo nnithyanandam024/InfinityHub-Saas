@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
-    paddingBottom: 40
+    paddingBottom: 130
   },
   inputGroup: {
     marginBottom: theme.spacing.md

@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
-    paddingBottom: 40
+    paddingBottom: 130
   },
   productCard: {
     backgroundColor: theme.colors.card,

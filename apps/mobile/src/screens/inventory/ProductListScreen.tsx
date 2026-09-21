@@ -9,7 +9,8 @@ import {
   Image,
   ScrollView,
   StatusBar,
-  RefreshControl
+  RefreshControl,
+  Platform
 } from 'react-native';
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
@@ -578,7 +579,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: theme.spacing.lg,
-    paddingBottom: 130
+    paddingBottom: 170
   },
   // List Item Styles
   listCard: {
@@ -844,8 +845,8 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
+    bottom: Platform.OS === 'ios' ? 104 : 96,
+    right: 18,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.primary,
@@ -853,7 +854,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 18,
     gap: 8,
-    ...theme.shadows.hover
+    ...theme.shadows.hover,
+    elevation: 12
   },
   fabText: {
     fontSize: 13,

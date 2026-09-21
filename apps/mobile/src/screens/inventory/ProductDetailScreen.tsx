@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
-    paddingBottom: 36
+    paddingBottom: 130
   },
   heroContainer: {
     width: '100%',
