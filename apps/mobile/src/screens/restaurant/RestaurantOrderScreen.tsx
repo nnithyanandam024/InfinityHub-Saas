@@ -39,7 +39,8 @@ export const RestaurantOrderScreen: React.FC<{ navigation: any }> = ({ navigatio
     clearDraftOrder,
     fireKot,
     voidKotItem,
-    activeOrder
+    activeOrder,
+    sections
   } = useRestaurant();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -222,7 +223,7 @@ export const RestaurantOrderScreen: React.FC<{ navigation: any }> = ({ navigatio
       <AppHeader
         navigation={navigation}
         title={selectedTable ? `Table ${selectedTable.tableNumber}` : 'Captain Order Pad'}
-        subtitleBadge={selectedTable ? `${selectedTable.guestCount || selectedTable.capacity} Guests · ${selectedTable.status.toUpperCase()}` : 'Tap to Select Table'}
+        subtitleBadge={selectedTable ? `${selectedTable.guestCount || selectedTable.capacity} Guests · ${selectedTable.status.toUpperCase()}` : 'Tap to Choose Table'}
         icon="utensils"
         onBadgePress={() => setIsTablePickerOpen(true)}
         rightAction={
@@ -236,6 +237,92 @@ export const RestaurantOrderScreen: React.FC<{ navigation: any }> = ({ navigatio
         }
         onAvatarPress={() => navigation.navigate('RestaurantAccountTab')}
       />
+
+      {/* User-Friendly Table Context & Quick Switcher Strip */}
+      <View style={styles.tableContextBar}>
+        <View style={styles.contextHeaderRow}>
+          <View style={styles.contextSelectedInfo}>
+            <View style={styles.contextDotAndTable}>
+              <View
+                style={[
+                  styles.contextStatusDot,
+                  { backgroundColor: !selectedTable ? theme.colors.muted : selectedTable.status === 'vacant' ? '#22C55E' : '#F59E0B' }
+                ]}
+              />
+              <Text style={styles.contextSelectedTitle}>
+                {selectedTable ? `Table ${selectedTable.tableNumber}` : 'No Table Selected'}
+              </Text>
+              {selectedTable ? (
+                <View style={styles.contextStatusTag}>
+                  <Text style={styles.contextStatusTagText}>{selectedTable.status.toUpperCase()}</Text>
+                </View>
+              ) : null}
+            </View>
+            <Text style={styles.contextSelectedSub}>
+              {selectedTable
+                ? `${selectedTable.guestCount || selectedTable.capacity} Guests · Captain ${selectedTable.captainName || 'Staff'}`
+                : 'Select a table below to begin taking orders'}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.chooseTableBtn}
+            onPress={() => setIsTablePickerOpen(true)}
+            activeOpacity={0.8}
+          >
+            <Icon name="table" size={12} color={theme.colors.navy} />
+            <Text style={styles.chooseTableBtnText}>All Tables</Text>
+            <Icon name="chevronDown" size={10} color={theme.colors.navy} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Horizontal Quick Table Selector Strip */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tablePillsScroll}
+        >
+          {tables.map(t => {
+            const isSelected = selectedTableId === t.id;
+            const isVacant = t.status === 'vacant';
+            return (
+              <TouchableOpacity
+                key={t.id}
+                style={[
+                  styles.tableQuickPill,
+                  isSelected && styles.tableQuickPillActive,
+                  !isSelected && !isVacant && styles.tableQuickPillOccupied
+                ]}
+                onPress={() => setSelectedTableId(t.id)}
+                activeOpacity={0.75}
+              >
+                <View
+                  style={[
+                    styles.tablePillDot,
+                    { backgroundColor: isVacant ? '#22C55E' : '#F59E0B' }
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.tableQuickPillText,
+                    isSelected && styles.tableQuickPillTextActive
+                  ]}
+                >
+                  {t.tableNumber}
+                </Text>
+                <Text
+                  style={[
+                    styles.tableQuickPillCapacity,
+                    isSelected && styles.tableQuickPillCapacityActive
+                  ]}
+                >
+                  {t.guestCount || t.capacity}p
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {/* Search Input */}
       <View style={styles.searchBarWrap}>
@@ -459,24 +546,86 @@ export const RestaurantOrderScreen: React.FC<{ navigation: any }> = ({ navigatio
       >
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setIsTablePickerOpen(false)}>
           <View style={styles.pickerSheet}>
-            <Text style={styles.pickerTitle}>Select Active Table</Text>
-            <ScrollView style={{ maxHeight: 320 }}>
-              {activeTables.map(t => (
-                <TouchableOpacity
-                  key={t.id}
-                  style={[styles.pickerItem, selectedTableId === t.id && styles.pickerItemActive]}
-                  onPress={() => {
-                    setSelectedTableId(t.id);
-                    setIsTablePickerOpen(false);
-                  }}
-                >
-                  <View>
-                    <Text style={styles.pickerTableNumber}>Table {t.tableNumber}</Text>
-                    <Text style={styles.pickerTableMeta}>{t.guestCount || t.capacity} Guests · Captain {t.captainName || 'Rajesh'}</Text>
-                  </View>
-                  <Text style={styles.pickerStatus}>{t.status.toUpperCase()}</Text>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.pickerHeaderRow}>
+              <View>
+                <Text style={styles.pickerTitle}>Choose Dining Table</Text>
+                <Text style={styles.pickerSubtext}>Select any table to start or switch table order pad</Text>
+              </View>
+              <TouchableOpacity onPress={() => setIsTablePickerOpen(false)} style={styles.pickerCloseBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Icon name="close" size={16} color={theme.colors.body} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
+              {tables.map(t => {
+                const isSelected = selectedTableId === t.id;
+                const secName = sections.find(s => s.id === t.sectionId)?.name || 'Dining Area';
+                const isVacant = t.status === 'vacant';
+                return (
+                  <TouchableOpacity
+                    key={t.id}
+                    style={[styles.pickerItem, isSelected && styles.pickerItemActive]}
+                    onPress={() => {
+                      setSelectedTableId(t.id);
+                      setIsTablePickerOpen(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={styles.pickerTableNumber}>Table {t.tableNumber}</Text>
+                        <Text style={styles.pickerSectionName}>· {secName}</Text>
+                      </View>
+                      <Text style={styles.pickerTableMeta}>
+                        {t.guestCount || t.capacity} Guests · {t.captainName ? `Captain ${t.captainName}` : isVacant ? 'Vacant Table' : 'Assigned'}
+                      </Text>
+                    </View>
+
+                    <View style={{ alignItems: 'flex-end', gap: 3 }}>
+                      <View
+                        style={[
+                          styles.pickerStatusPill,
+                          {
+                            backgroundColor:
+                              isVacant
+                                ? theme.colors.successBg
+                                : t.status === 'ordered'
+                                ? theme.colors.warningBg
+                                : t.status === 'served'
+                                ? '#F3E8FF'
+                                : t.status === 'billed'
+                                ? theme.colors.dangerBg
+                                : theme.colors.infoBg
+                          }
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.pickerStatusText,
+                            {
+                              color:
+                                isVacant
+                                  ? theme.colors.successText
+                                  : t.status === 'ordered'
+                                  ? theme.colors.warningText
+                                  : t.status === 'served'
+                                  ? '#6B21A8'
+                                  : t.status === 'billed'
+                                  ? theme.colors.dangerText
+                                  : theme.colors.infoText
+                            }
+                          ]}
+                        >
+                          {t.status.toUpperCase()}
+                        </Text>
+                      </View>
+                      {t.currentBillTotal ? (
+                        <Text style={styles.pickerBillTotal}>₹{t.currentBillTotal}</Text>
+                      ) : null}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
         </TouchableOpacity>
@@ -511,43 +660,113 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   tableContextBar: {
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    paddingTop: 10,
+    paddingBottom: 10
+  },
+  contextHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
+    marginBottom: 8
   },
-  contextInfo: {
-    flex: 1
+  contextSelectedInfo: {
+    flex: 1,
+    marginRight: 8
   },
-  contextRow: {
+  contextDotAndTable: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8
+    gap: 6
   },
-  contextTable: {
-    fontSize: 16,
+  contextStatusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4
+  },
+  contextSelectedTitle: {
+    fontSize: 15,
     fontWeight: '800',
     color: theme.colors.navy
   },
-  contextStatusPill: {
+  contextStatusTag: {
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 1,
     borderRadius: theme.radii.xs,
     backgroundColor: theme.colors.primaryTint
   },
-  contextStatusText: {
-    fontSize: 10,
-    fontWeight: '700',
+  contextStatusTagText: {
+    fontSize: 9,
+    fontWeight: '800',
     color: theme.colors.primary
   },
-  contextSub: {
+  contextSelectedSub: {
     fontSize: 11,
     color: theme.colors.muted,
     marginTop: 2
+  },
+  chooseTableBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: theme.radii.full,
+    backgroundColor: theme.colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 4
+  },
+  chooseTableBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.navy
+  },
+  tablePillsScroll: {
+    paddingHorizontal: theme.spacing.lg,
+    gap: 8
+  },
+  tableQuickPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: theme.radii.full,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 5
+  },
+  tableQuickPillActive: {
+    backgroundColor: theme.colors.navy,
+    borderColor: theme.colors.navy
+  },
+  tableQuickPillOccupied: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FDE68A'
+  },
+  tablePillDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3
+  },
+  tableQuickPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.colors.navy
+  },
+  tableQuickPillTextActive: {
+    color: '#FFFFFF'
+  },
+  tableQuickPillCapacity: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: theme.colors.muted
+  },
+  tableQuickPillCapacityActive: {
+    color: 'rgba(255, 255, 255, 0.8)'
   },
   switchTablePill: {
     paddingHorizontal: 10,
@@ -959,36 +1178,70 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     paddingBottom: 32
   },
+  pickerHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 14
+  },
   pickerTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: theme.colors.navy,
-    marginBottom: 12
+    fontWeight: '800',
+    color: theme.colors.navy
+  },
+  pickerSubtext: {
+    fontSize: 11,
+    color: theme.colors.muted,
+    marginTop: 2
+  },
+  pickerCloseBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: theme.colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   pickerItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 11,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
+    borderBottomColor: theme.colors.surfaceSubtle
   },
   pickerItemActive: {
-    backgroundColor: theme.colors.primaryTint
+    backgroundColor: theme.colors.primaryTint,
+    borderRadius: theme.radii.sm,
+    paddingHorizontal: 8
   },
   pickerTableNumber: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: theme.colors.navy
   },
-  pickerTableMeta: {
+  pickerSectionName: {
     fontSize: 11,
     color: theme.colors.muted
   },
-  pickerStatus: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: theme.colors.primary
+  pickerTableMeta: {
+    fontSize: 11,
+    color: theme.colors.body,
+    marginTop: 2
+  },
+  pickerStatusPill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: theme.radii.xs
+  },
+  pickerStatusText: {
+    fontSize: 9,
+    fontWeight: '800'
+  },
+  pickerBillTotal: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: theme.colors.navy
   },
   emptyWrap: {
     alignItems: 'center',

@@ -22,6 +22,7 @@ import { useTenant } from '../../context/TenantContext';
 import { RestaurantTable, TableStatus } from '@infinityhub/types';
 import { RestaurantQuickSeatModal } from '../../components/restaurant/RestaurantQuickSeatModal';
 import { RestaurantSettlementModal } from '../../components/restaurant/RestaurantSettlementModal';
+import { RestaurantTableDetailsModal } from '../../components/restaurant/RestaurantTableDetailsModal';
 import { RestaurantManagerPinModal } from '../../components/restaurant/RestaurantManagerPinModal';
 
 export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -38,6 +39,7 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
   const [selectedSectionId, setSelectedSectionId] = useState<string>('all');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
   const [seatModalTable, setSeatModalTable] = useState<RestaurantTable | null>(null);
+  const [detailsModalTable, setDetailsModalTable] = useState<RestaurantTable | null>(null);
   const [settleModalTable, setSettleModalTable] = useState<RestaurantTable | null>(null);
   const [transferSourceTable, setTransferSourceTable] = useState<RestaurantTable | null>(null);
   const [transferTargetId, setTransferTargetId] = useState<string>('');
@@ -74,9 +76,8 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
       return;
     }
 
-    // Active table: select and switch to Order Pad tab
-    setSelectedTableId(table.id);
-    navigation.navigate('RestaurantOrderTab');
+    // Active table: Show list of items ordered on this table
+    setDetailsModalTable(table);
   };
 
   const handleSeatSuccess = (seatedTable: RestaurantTable) => {
@@ -335,6 +336,20 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
             }}
           />
         }
+      />
+
+      {/* Table Ordered Items Details Modal */}
+      <RestaurantTableDetailsModal
+        visible={!!detailsModalTable}
+        table={detailsModalTable}
+        onClose={() => setDetailsModalTable(null)}
+        onOrder={t => {
+          setSelectedTableId(t.id);
+          navigation.navigate('RestaurantOrderTab');
+        }}
+        onSettle={t => {
+          setSettleModalTable(t);
+        }}
       />
 
       {/* Quick Seat Modal */}

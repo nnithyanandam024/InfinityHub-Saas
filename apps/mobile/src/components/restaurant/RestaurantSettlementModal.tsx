@@ -30,7 +30,7 @@ export const RestaurantSettlementModal: React.FC<RestaurantSettlementModalProps>
   onClose,
   onSettled
 }) => {
-  const { settleTableBill, orders } = useRestaurant();
+  const { settleTableBill, orders, kots, sections } = useRestaurant();
 
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'card'>('cash');
   const [tenderedInput, setTenderedInput] = useState<string>('');
@@ -41,14 +41,53 @@ export const RestaurantSettlementModal: React.FC<RestaurantSettlementModalProps>
 
   // Active order for table
   const order = useMemo(() => {
-    if (!table?.activeOrderId) return null;
-    return orders.find(o => o.id === table.activeOrderId) || null;
-  }, [orders, table]);
+    if (!table) return null;
+    const found = orders.find(o => (table.activeOrderId && o.id === table.activeOrderId) || (o.tableId === table.id && o.orderStatus !== 'settled'));
+    if (found) {
+      const orderKots = found.kots && found.kots.length > 0 ? found.kots : kots.filter(k => k.orderId === found.id || k.tableId === table.id);
+      return { ...found, kots: orderKots };
+    }
+
+    // Resilient fallback order synthesis if table has active status or bill
+    if (table.status !== 'vacant' && table.status !== 'cleaning') {
+      const tableKots = kots.filter(k => k.tableId === table.id || (table.activeKotIds && table.activeKotIds.includes(k.id)));
+      const baseTotal = tableKots.reduce((sum, kot) =>
+        sum + kot.items.reduce((ksum, itm) => itm.status !== 'cancelled' ? ksum + (itm.unitPrice * itm.quantity) : ksum, 0),
+        0
+      ) || table.currentBillTotal || 0;
+      const cgst = baseTotal * 0.025;
+      const sgst = baseTotal * 0.025;
+      return {
+        id: table.activeOrderId || `ord-${table.id}`,
+        orderNumber: `ORD-${table.tableNumber}`,
+        orderType: 'dine_in' as const,
+        tableId: table.id,
+        tableNumber: table.tableNumber,
+        sectionName: sections.find(s => s.id === table.sectionId)?.name || 'Main Dining',
+        guestCount: table.guestCount || table.capacity || 2,
+        captainName: table.captainName || 'Staff Captain',
+        kots: tableKots,
+        subtotal: baseTotal,
+        discount: 0,
+        serviceCharge: 0,
+        cgst,
+        sgst,
+        roundOff: 0,
+        grandTotal: Math.round(baseTotal + cgst + sgst),
+        payments: [],
+        orderStatus: 'open' as const,
+        billPrintedCount: 0,
+        reprintHistory: [],
+        createdAt: table.seatedAt || new Date().toISOString()
+      };
+    }
+    return null;
+  }, [orders, table, kots, sections]);
 
   // Compute live breakdown
   const calculations = useMemo(() => {
     let subtotal = 0;
-    if (order) {
+    if (order && order.kots && order.kots.length > 0) {
       for (const k of order.kots) {
         for (const item of k.items) {
           if (item.status !== 'cancelled') {
@@ -56,6 +95,9 @@ export const RestaurantSettlementModal: React.FC<RestaurantSettlementModalProps>
           }
         }
       }
+    }
+    if (subtotal === 0 && order) {
+      subtotal = order.subtotal || table?.currentBillTotal || 0;
     }
     const discount = Math.max(0, parseFloat(discountInput) || 0);
     const taxable = Math.max(0, subtotal - discount);
@@ -66,7 +108,7 @@ export const RestaurantSettlementModal: React.FC<RestaurantSettlementModalProps>
     const roundOff = Number((grandTotal - exactTotal).toFixed(2));
 
     return { subtotal, discount, taxable, cgst, sgst, roundOff, grandTotal };
-  }, [order, discountInput]);
+  }, [order, discountInput, table]);
 
   useEffect(() => {
     if (visible && calculations.grandTotal > 0) {
@@ -131,26 +173,33 @@ export const RestaurantSettlementModal: React.FC<RestaurantSettlementModalProps>
               {/* Order Items Preview */}
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>Itemized Order Summary</Text>
-                {order.kots.map(kot => (
-                  <View key={kot.id} style={styles.kotSection}>
-                    <Text style={styles.kotHeader}>{kot.kotNumber} · Station: {kot.station.toUpperCase()}</Text>
-                    {kot.items.map(item => (
-                      <View key={item.id} style={styles.itemRow}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.itemName, item.status === 'cancelled' && styles.itemCancelled]}>
-                            {item.name} x{item.quantity}
+                {order.kots && order.kots.length > 0 ? (
+                  order.kots.map(kot => (
+                    <View key={kot.id} style={styles.kotSection}>
+                      <Text style={styles.kotHeader}>{kot.kotNumber} · Station: {kot.station.toUpperCase()}</Text>
+                      {kot.items.map(item => (
+                        <View key={item.id} style={styles.itemRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={[styles.itemName, item.status === 'cancelled' && styles.itemCancelled]}>
+                              {item.name} x{item.quantity}
+                            </Text>
+                            {item.status === 'cancelled' ? (
+                              <Text style={styles.cancelReason}>Voided: {item.cancelledReason}</Text>
+                            ) : null}
+                          </View>
+                          <Text style={[styles.itemPrice, item.status === 'cancelled' && styles.itemCancelled]}>
+                            {item.status === 'cancelled' ? 'Void' : `₹${item.unitPrice * item.quantity}`}
                           </Text>
-                          {item.status === 'cancelled' ? (
-                            <Text style={styles.cancelReason}>Voided: {item.cancelledReason}</Text>
-                          ) : null}
                         </View>
-                        <Text style={[styles.itemPrice, item.status === 'cancelled' && styles.itemCancelled]}>
-                          {item.status === 'cancelled' ? 'Void' : `₹${item.unitPrice * item.quantity}`}
-                        </Text>
-                      </View>
-                    ))}
+                      ))}
+                    </View>
+                  ))
+                ) : (
+                  <View style={styles.itemRow}>
+                    <Text style={styles.itemName}>Dining Charges (Table {table.tableNumber})</Text>
+                    <Text style={styles.itemPrice}>₹{calculations.subtotal}</Text>
                   </View>
-                ))}
+                )}
               </View>
 
               {/* Tax Breakdown */}

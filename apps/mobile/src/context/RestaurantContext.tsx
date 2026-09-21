@@ -134,11 +134,57 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             { id: 'itm-06', name: 'Gulab Jamun with Rabri', code: 'GJR-06', categoryId: 'cat-dessert', categoryName: 'Desserts', price: 150, taxRate: 5, prepTimeMinutes: 5, station: 'dessert', dietary: 'veg', description: 'Warm khoya dumplings topped with thickened milk', isAvailable: true }
           ];
 
+      const loadedKots: RestaurantKot[] = tenantSeed.restaurantKots || [];
+      let loadedOrders: RestaurantOrder[] = (tenantSeed.restaurantOrders || []).map(o => ({
+        ...o,
+        kots: o.kots && o.kots.length > 0 ? o.kots : loadedKots.filter(k => k.orderId === o.id || (o.tableId && k.tableId === o.tableId))
+      }));
+
+      // Ensure every seated/ordered/billed table has an associated order record
+      for (const t of loadedTables) {
+        if (t.status !== 'vacant' && t.status !== 'cleaning') {
+          const existing = loadedOrders.find(o => o.id === t.activeOrderId || o.tableId === t.id);
+          if (!existing) {
+            const tableKots = loadedKots.filter(k => k.tableId === t.id || (t.activeKotIds && t.activeKotIds.includes(k.id)));
+            const subtotal = tableKots.reduce((sum, kot) =>
+              sum + kot.items.reduce((ksum, itm) => itm.status !== 'cancelled' ? ksum + (itm.unitPrice * itm.quantity) : ksum, 0),
+              0
+            ) || t.currentBillTotal || 0;
+            const cgst = subtotal * 0.025;
+            const sgst = subtotal * 0.025;
+            const grandTotal = Math.round(subtotal + cgst + sgst);
+            loadedOrders.push({
+              id: t.activeOrderId || `ord-${t.id}`,
+              orderNumber: `ORD-${t.tableNumber}`,
+              orderType: 'dine_in',
+              tableId: t.id,
+              tableNumber: t.tableNumber,
+              sectionName: loadedSections.find(s => s.id === t.sectionId)?.name || 'Main Dining',
+              guestCount: t.guestCount || t.capacity || 2,
+              captainName: t.captainName || 'Staff Captain',
+              kots: tableKots,
+              subtotal,
+              discount: 0,
+              serviceCharge: 0,
+              cgst,
+              sgst,
+              roundOff: 0,
+              grandTotal,
+              payments: [],
+              orderStatus: t.status === 'billed' ? 'billed' : 'open',
+              billPrintedCount: 0,
+              reprintHistory: [],
+              createdAt: t.seatedAt || new Date().toISOString()
+            });
+          }
+        }
+      }
+
       setSections(loadedSections);
       setTables(loadedTables);
       setMenuItems(loadedMenu);
-      setKots(tenantSeed.restaurantKots || []);
-      setOrders(tenantSeed.restaurantOrders || []);
+      setKots(loadedKots);
+      setOrders(loadedOrders);
       setWasteLogs(tenantSeed.restaurantWasteLogs || []);
       setTableAudits(tenantSeed.restaurantTableAudits || []);
     } catch {
@@ -159,9 +205,48 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Active order for selected table
   const activeOrder = useMemo(() => {
-    if (!selectedTable?.activeOrderId) return null;
-    return orders.find(o => o.id === selectedTable.activeOrderId) || null;
-  }, [orders, selectedTable]);
+    if (!selectedTable) return null;
+    const found = orders.find(o => (selectedTable.activeOrderId && o.id === selectedTable.activeOrderId) || (o.tableId === selectedTable.id && o.orderStatus !== 'settled'));
+    if (found) {
+      const orderKots = found.kots && found.kots.length > 0 ? found.kots : kots.filter(k => k.orderId === found.id || k.tableId === selectedTable.id);
+      return { ...found, kots: orderKots };
+    }
+
+    if (selectedTable.status !== 'vacant' && selectedTable.status !== 'cleaning') {
+      const tableKots = kots.filter(k => k.tableId === selectedTable.id || (selectedTable.activeKotIds && selectedTable.activeKotIds.includes(k.id)));
+      const subtotal = tableKots.reduce((sum, kot) =>
+        sum + kot.items.reduce((ksum, itm) => itm.status !== 'cancelled' ? ksum + (itm.unitPrice * itm.quantity) : ksum, 0),
+        0
+      ) || selectedTable.currentBillTotal || 0;
+      const cgst = subtotal * 0.025;
+      const sgst = subtotal * 0.025;
+      const grandTotal = Math.round(subtotal + cgst + sgst);
+      return {
+        id: selectedTable.activeOrderId || `ord-${selectedTable.id}`,
+        orderNumber: `ORD-${selectedTable.tableNumber}`,
+        orderType: 'dine_in' as const,
+        tableId: selectedTable.id,
+        tableNumber: selectedTable.tableNumber,
+        sectionName: sections.find(s => s.id === selectedTable.sectionId)?.name || 'Main Dining',
+        guestCount: selectedTable.guestCount || selectedTable.capacity || 2,
+        captainName: selectedTable.captainName || 'Staff Captain',
+        kots: tableKots,
+        subtotal,
+        discount: 0,
+        serviceCharge: 0,
+        cgst,
+        sgst,
+        roundOff: 0,
+        grandTotal,
+        payments: [],
+        orderStatus: selectedTable.status === 'billed' ? ('billed' as const) : ('open' as const),
+        billPrintedCount: 0,
+        reprintHistory: [],
+        createdAt: selectedTable.seatedAt || new Date().toISOString()
+      };
+    }
+    return null;
+  }, [orders, selectedTable, kots, sections]);
 
   // Occupancy KPIs
   const occupancyStats = useMemo(() => {
@@ -611,16 +696,52 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const table = tables.find(t => t.id === tableId);
     if (!table) throw new Error('Table not found');
 
-    const order = orders.find(o => o.id === table.activeOrderId);
-    if (!order) throw new Error('No active order to settle');
+    let order = orders.find(o => (table.activeOrderId && o.id === table.activeOrderId) || (o.tableId === table.id && o.orderStatus !== 'settled'));
+    if (!order) {
+      const tableKots = kots.filter(k => k.tableId === table.id || (table.activeKotIds && table.activeKotIds.includes(k.id)));
+      const baseSubtotal = tableKots.reduce((sum, kot) =>
+        sum + kot.items.reduce((ksum, itm) => itm.status !== 'cancelled' ? ksum + (itm.unitPrice * itm.quantity) : ksum, 0),
+        0
+      ) || table.currentBillTotal || 0;
+      const cgstVal = baseSubtotal * 0.025;
+      const sgstVal = baseSubtotal * 0.025;
+      order = {
+        id: table.activeOrderId || `ord-${table.id}-${Date.now()}`,
+        orderNumber: `ORD-${table.tableNumber}`,
+        orderType: 'dine_in',
+        tableId: table.id,
+        tableNumber: table.tableNumber,
+        sectionName: sections.find(s => s.id === table.sectionId)?.name || 'Main Dining',
+        guestCount: table.guestCount || table.capacity || 2,
+        captainName: table.captainName || 'Staff Captain',
+        kots: tableKots,
+        subtotal: baseSubtotal,
+        discount: 0,
+        serviceCharge: 0,
+        cgst: cgstVal,
+        sgst: sgstVal,
+        roundOff: 0,
+        grandTotal: Math.round(baseSubtotal + cgstVal + sgstVal),
+        payments: [],
+        orderStatus: 'open',
+        billPrintedCount: 0,
+        reprintHistory: [],
+        createdAt: table.seatedAt || new Date().toISOString()
+      };
+    }
 
     let subtotal = 0;
-    for (const k of order.kots) {
-      for (const itm of k.items) {
-        if (itm.status !== 'cancelled') {
-          subtotal += itm.unitPrice * itm.quantity;
+    if (order.kots && order.kots.length > 0) {
+      for (const k of order.kots) {
+        for (const itm of k.items) {
+          if (itm.status !== 'cancelled') {
+            subtotal += itm.unitPrice * itm.quantity;
+          }
         }
       }
+    }
+    if (subtotal === 0) {
+      subtotal = order.subtotal || table.currentBillTotal || 0;
     }
 
     const discount = payload.discountAmount || 0;
@@ -648,7 +769,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       settledAt: new Date().toISOString()
     };
 
-    const invoiceItems: any[] = order.kots.flatMap(k =>
+    let invoiceItems: any[] = (order.kots || []).flatMap(k =>
       k.items
         .filter(i => i.status !== 'cancelled')
         .map(i => {
@@ -677,6 +798,34 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           };
         })
     );
+
+    if (invoiceItems.length === 0) {
+      const itemTaxable = subtotal;
+      const itemCgst = itemTaxable * 0.025;
+      const itemSgst = itemTaxable * 0.025;
+      invoiceItems = [
+        {
+          productId: 'item-dining',
+          productName: `Dining Charges (Table ${table.tableNumber})`,
+          sku: 'DINE-01',
+          hsnCode: '996331',
+          unitPrice: subtotal,
+          quantity: 1,
+          unit: 'portion',
+          discountPercent: 0,
+          discountAmount: 0,
+          taxRate: 5,
+          cgstRate: 2.5,
+          cgstAmount: itemCgst,
+          sgstRate: 2.5,
+          sgstAmount: itemSgst,
+          igstRate: 0,
+          igstAmount: 0,
+          taxableAmount: itemTaxable,
+          total: itemTaxable + itemCgst + itemSgst
+        }
+      ];
+    }
 
     const invoice: Invoice = {
       id: `inv-${Date.now()}`,
@@ -717,15 +866,24 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     const updatedTable: RestaurantTable = {
       ...table,
-      status: 'cleaning',
-      currentBillTotal: 0
+      status: 'vacant',
+      activeOrderId: undefined,
+      activeKotIds: [],
+      currentBillTotal: 0,
+      guestCount: undefined,
+      captainName: undefined,
+      seatedAt: undefined,
+      lastKotAt: undefined
     };
 
-    setOrders(prev => prev.map(o => (o.id === settledOrder.id ? settledOrder : o)));
+    setOrders(prev => {
+      const exists = prev.some(o => o.id === settledOrder.id);
+      return exists ? prev.map(o => (o.id === settledOrder.id ? settledOrder : o)) : [settledOrder, ...prev];
+    });
     setTables(prev => prev.map(t => (t.id === tableId ? updatedTable : t)));
 
     return { order: settledOrder, invoice };
-  }, [tables, orders]);
+  }, [tables, orders, kots, sections, tenant, tenantId]);
 
   // Reset cleaning table to vacant
   const resetTableToVacant = useCallback(async (tableId: string): Promise<RestaurantTable> => {
