@@ -12,9 +12,9 @@ import {
   Platform,
   PermissionsAndroid,
   Animated,
-  NativeModules,
   DeviceEventEmitter
 } from 'react-native';
+import { Camera, CameraType, TorchMode } from 'react-native-camera-kit';
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
 import { Badge } from '../../components/common/Badge';
@@ -23,58 +23,29 @@ import { AppHeader } from '../../components/layout/AppHeader';
 import { useTenant } from '../../context/TenantContext';
 import { Product } from '@infinityhub/types';
 
-// Safe runtime detection of camera kit to prevent Invariant Violation crashes in Hermes
-let CameraComponent: any = null;
-let CameraTypeEnum: any = { Back: 'back', Front: 'front' };
-let TorchModeEnum: any = { Off: 'off', On: 'on' };
-
-try {
-  if (NativeModules && (NativeModules.RNCameraKitModule || NativeModules.CameraKitModule)) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const CameraKit = require('react-native-camera-kit');
-    if (CameraKit && CameraKit.Camera) {
-      CameraComponent = CameraKit.Camera;
-      CameraTypeEnum = CameraKit.CameraType || CameraTypeEnum;
-      TorchModeEnum = CameraKit.TorchMode || TorchModeEnum;
-    }
-  }
-} catch {
-  CameraComponent = null;
-}
-
 export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = ({ navigation, route }) => {
   const { products, formatPrice } = useTenant();
   const onScanCallback = route?.params?.onScan;
   const targetMode = route?.params?.target;
 
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [hasPermission, setHasPermission] = useState<boolean>(true);
   const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(true);
   const [barcodeInput, setBarcodeInput] = useState<string>('');
   const [matchedProduct, setMatchedProduct] = useState<Product | null>(products[0] || null);
-  const [statusMessage, setStatusMessage] = useState<string>(
-    CameraComponent
-      ? 'Align barcode inside camera frame'
-      : 'Ready (Simulation Mode - Rebuild native APK for live camera)'
-  );
 
   const lastScannedTime = useRef<number>(0);
   const laserAnim = useRef(new Animated.Value(0)).current;
 
-  // Request runtime camera permission if camera component is available
+  // Request runtime camera permission on mount
   const requestCameraPermission = useCallback(async () => {
-    if (!CameraComponent) {
-      setHasPermission(false);
-      return;
-    }
-
     if (Platform.OS === 'android') {
       try {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
             title: 'Camera Access Required',
-            message: 'Camera permission is required to scan product barcodes.',
+            message: 'Camera permission is required to scan product barcodes in real time.',
             buttonPositive: 'Allow',
             buttonNegative: 'Cancel'
           }
@@ -89,11 +60,7 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
   }, []);
 
   useEffect(() => {
-    if (CameraComponent) {
-      requestCameraPermission();
-    } else {
-      setHasPermission(false);
-    }
+    requestCameraPermission();
   }, [requestCameraPermission]);
 
   // Animated laser scan line
@@ -137,12 +104,10 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
 
     if (found) {
       setMatchedProduct(found);
-      setStatusMessage(`Found: ${found.name}`);
 
       // Emit global event for listeners (e.g. POS cart, NewProduct form)
       DeviceEventEmitter.emit('onBarcodeScanned', found.barcode || found.sku);
 
-      // Support legacy callback if provided
       if (typeof onScanCallback === 'function') {
         onScanCallback(found.barcode || found.sku);
       }
@@ -152,9 +117,8 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
       }
     } else {
       setMatchedProduct(null);
-      setStatusMessage(`No match found for: ${clean}`);
 
-      // Emit code even if not found in catalog, so forms can capture new codes
+      // Emit code even if not found in catalog, so new product form can capture it
       DeviceEventEmitter.emit('onBarcodeScanned', clean);
       if (typeof onScanCallback === 'function') {
         onScanCallback(clean);
@@ -171,7 +135,6 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
     const clean = code.trim().toLowerCase();
     if (!clean) {
       setMatchedProduct(null);
-      setStatusMessage('Align barcode inside camera frame');
       return;
     }
     const found = products.find(
@@ -181,16 +144,11 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
         p.name.toLowerCase().includes(clean)
     );
     setMatchedProduct(found || null);
-    if (found) {
-      setStatusMessage(`Matched: ${found.name}`);
-    } else {
-      setStatusMessage(`No match for "${code}"`);
-    }
   };
 
   const laserTranslateY = laserAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [10, 170]
+    outputRange: [10, 180]
   });
 
   return (
@@ -222,15 +180,15 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
       )}
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Scanner Card */}
+        {/* Scanner Viewfinder Card */}
         <View style={styles.cameraCard}>
           <View style={styles.cameraFrame}>
-            {CameraComponent && hasPermission ? (
-              <CameraComponent
+            {hasPermission ? (
+              <Camera
                 style={styles.cameraView}
-                cameraType={CameraTypeEnum.Back}
+                cameraType={CameraType.Back}
                 scanBarcode={isScanning}
-                torchMode={isTorchOn ? TorchModeEnum.On : TorchModeEnum.Off}
+                torchMode={isTorchOn ? TorchMode.On : TorchMode.Off}
                 showFrame={false}
                 onReadCode={(event: any) => {
                   const code = event?.nativeEvent?.codeStringValue;
@@ -240,12 +198,7 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
                 }}
               />
             ) : (
-              <View style={styles.viewfinderCenter}>
-                <Icon name="barcode" size={48} color={theme.colors.primary} />
-                <Text style={styles.viewfinderCenterText}>
-                  {CameraComponent ? 'Camera Ready' : 'Interactive Barcode Scanner'}
-                </Text>
-              </View>
+              <View style={styles.cameraView} />
             )}
 
             {/* Target Viewfinder Overlays */}
@@ -268,18 +221,16 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
 
             {/* Viewfinder Controls */}
             <View style={styles.cameraControlsRow}>
-              {CameraComponent && (
-                <TouchableOpacity
-                  style={[styles.controlPill, isTorchOn && styles.controlPillActive]}
-                  onPress={() => setIsTorchOn(!isTorchOn)}
-                  activeOpacity={0.8}
-                >
-                  <Icon name="tag" size={14} color={isTorchOn ? '#FFFFFF' : theme.colors.navy} />
-                  <Text style={[styles.controlText, isTorchOn && styles.controlTextActive]}>
-                    {isTorchOn ? 'Torch On' : 'Torch Off'}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                style={[styles.controlPill, isTorchOn && styles.controlPillActive]}
+                onPress={() => setIsTorchOn(!isTorchOn)}
+                activeOpacity={0.8}
+              >
+                <Icon name="tag" size={14} color={isTorchOn ? '#FFFFFF' : theme.colors.navy} />
+                <Text style={[styles.controlText, isTorchOn && styles.controlTextActive]}>
+                  {isTorchOn ? 'Torch On' : 'Torch Off'}
+                </Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.controlPill, !isScanning && styles.controlPillActive]}
@@ -292,14 +243,6 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
-
-          {/* Status Strip */}
-          <View style={styles.statusStrip}>
-            <View style={styles.statusDot} />
-            <Text style={styles.statusText} numberOfLines={1}>
-              {statusMessage}
-            </Text>
           </View>
         </View>
 
@@ -321,7 +264,6 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
                 onPress={() => {
                   setBarcodeInput('');
                   setMatchedProduct(null);
-                  setStatusMessage('Align barcode inside camera frame');
                 }}
                 style={styles.clearBtn}
               >
@@ -479,7 +421,7 @@ const styles = StyleSheet.create({
     paddingBottom: 130
   },
   cameraCard: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: '#0F172A',
     borderRadius: theme.radii.lg,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -489,7 +431,7 @@ const styles = StyleSheet.create({
   },
   cameraFrame: {
     width: '100%',
-    height: 200,
+    height: 220,
     backgroundColor: '#0F172A',
     position: 'relative',
     overflow: 'hidden',
@@ -499,16 +441,6 @@ const styles = StyleSheet.create({
   cameraView: {
     ...StyleSheet.absoluteFillObject
   },
-  viewfinderCenter: {
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  viewfinderCenterText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#94A3B8',
-    marginTop: 8
-  },
   targetOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
@@ -516,8 +448,8 @@ const styles = StyleSheet.create({
   },
   corner: {
     position: 'absolute',
-    width: 22,
-    height: 22,
+    width: 24,
+    height: 24,
     borderColor: theme.colors.primary,
     borderWidth: 3
   },
@@ -527,8 +459,8 @@ const styles = StyleSheet.create({
   bottomRight: { bottom: 16, right: 16, borderLeftWidth: 0, borderTopWidth: 0 },
   laserLine: {
     position: 'absolute',
-    left: 20,
-    right: 20,
+    left: 24,
+    right: 24,
     height: 2,
     backgroundColor: '#EF4444',
     shadowColor: '#EF4444',
@@ -563,28 +495,6 @@ const styles = StyleSheet.create({
   },
   controlTextActive: {
     color: '#FFFFFF'
-  },
-  statusStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: '#F8FAFC',
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: theme.colors.primary,
-    marginRight: 8
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: theme.colors.body,
-    flex: 1
   },
   inputGroup: {
     marginBottom: theme.spacing.md
