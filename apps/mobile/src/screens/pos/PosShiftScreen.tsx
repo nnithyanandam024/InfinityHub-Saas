@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 96
+    paddingBottom: 130
   },
   statusCard: {
     borderRadius: 18,

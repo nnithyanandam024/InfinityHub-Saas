@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: theme.spacing.lg,
-    paddingBottom: 96
+    paddingBottom: 130
   },
   dishRow: {
     flexDirection: 'row',

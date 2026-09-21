@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: theme.spacing.lg,
-    paddingBottom: 160
+    paddingBottom: 180
   },
   dishCard: {
     backgroundColor: '#FFFFFF',
@@ -759,9 +759,9 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 92 : 86,
-    left: 14,
-    right: 14,
+    bottom: Platform.OS === 'ios' ? 96 : 90,
+    left: 16,
+    right: 16,
     backgroundColor: '#0F172A',
     paddingHorizontal: 14,
     paddingVertical: 10,

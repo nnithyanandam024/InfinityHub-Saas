@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
-    paddingBottom: 96,
+    paddingBottom: 130,
     gap: 12
   },
   invoiceCard: {

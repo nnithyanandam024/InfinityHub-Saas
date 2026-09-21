@@ -38,8 +38,8 @@ export const FloatingTabBar: React.FC<BottomTabBarProps> = ({
     return null;
   }
 
-  // Safe bottom offset for devices with home indicator bars
-  const bottomOffset = Platform.OS === 'ios' ? Math.max(insets.bottom, 14) + 4 : 14;
+  // Safe bottom offset for devices with home indicator bars or Android navigation bars
+  const bottomOffset = Math.max(insets?.bottom || 0, 14) + (Platform.OS === 'android' ? 8 : 4);
 
   return (
     <View style={[styles.floatingDock, { bottom: bottomOffset }]}>
@@ -120,15 +120,16 @@ export const FloatingTabBar: React.FC<BottomTabBarProps> = ({
 const styles = StyleSheet.create({
   floatingDock: {
     position: 'absolute',
-    left: 14,
-    right: 14,
-    height: 64,
+    left: 16,
+    right: 16,
+    height: 66,
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     borderWidth: 1,
     borderColor: 'rgba(226, 232, 240, 0.85)',
     shadowColor: '#0F172A',
@@ -141,13 +142,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4
+    justifyContent: 'center'
   },
   iconWrap: {
-    width: 38,
-    height: 26,
-    borderRadius: 13,
+    width: 40,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent'

@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
   },
   gridContent: {
     padding: 12,
-    paddingBottom: 160
+    paddingBottom: 180
   },
   gridRow: {
     justifyContent: 'space-between',
@@ -605,9 +605,9 @@ const styles = StyleSheet.create({
   },
   cartStickyBar: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 92 : 86,
-    left: 14,
-    right: 14,
+    bottom: Platform.OS === 'ios' ? 96 : 90,
+    left: 16,
+    right: 16,
     backgroundColor: theme.colors.navy,
     borderRadius: 18,
     padding: 12,

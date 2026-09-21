@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
-    paddingBottom: 96
+    paddingBottom: 130
   },
   userCard: {
     flexDirection: 'row',
