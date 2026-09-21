@@ -108,6 +108,335 @@ const DEFAULT_TAX_CONFIG: PosTaxConfig = {
 
 const PosContext = createContext<PosContextType | undefined>(undefined);
 
+const MOCK_INVOICES: Invoice[] = [
+  {
+    id: 'inv-1001',
+    invoiceNumber: 'INV-2026-1001',
+    orderId: 'ord-1001',
+    tenantId: 'tenant-city-retail',
+    tenantName: 'City Retail Hardware',
+    tenantAddress: '104 L.B. Shastri Road, Industrial Area, Coimbatore',
+    tenantGstin: '33AABCK1234F1Z5',
+    tenantState: 'Tamil Nadu',
+    tenantStateCode: '33',
+    customerName: 'Ramesh Kumar',
+    customerPhone: '+91 98430 11223',
+    invoiceDate: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+    isInterState: false,
+    items: [
+      {
+        productId: 'prod-city-1',
+        productName: 'Bosch GSB 500W Professional Impact Drill',
+        sku: 'DRL-500W',
+        unit: 'pcs',
+        quantity: 1,
+        unitPrice: 2899,
+        taxRate: 18,
+        cgstRate: 9,
+        sgstRate: 9,
+        igstRate: 0,
+        igstAmount: 0,
+        discountPercent: 0,
+        discountAmount: 0,
+        taxableAmount: 2456.78,
+        cgstAmount: 221.11,
+        sgstAmount: 221.11,
+        total: 2899
+      },
+      {
+        productId: 'prod-city-2',
+        productName: 'Stanley 5M Steel Measuring Tape (Auto-Lock)',
+        sku: 'TAP-5M',
+        unit: 'pcs',
+        quantity: 1,
+        unitPrice: 299,
+        taxRate: 18,
+        cgstRate: 9,
+        sgstRate: 9,
+        igstRate: 0,
+        igstAmount: 0,
+        discountPercent: 0,
+        discountAmount: 0,
+        taxableAmount: 253.39,
+        cgstAmount: 22.81,
+        sgstAmount: 22.81,
+        total: 299
+      }
+    ],
+    hsnSummary: [],
+    subtotal: 3198,
+    totalDiscount: 0,
+    taxableAmount: 2710.17,
+    totalCgst: 243.92,
+    totalSgst: 243.92,
+    totalIgst: 0,
+    totalTax: 487.83,
+    roundingAdjustment: 0,
+    grandTotal: 3198,
+    grandTotalInWords: 'Three Thousand One Hundred Ninety-Eight Rupees Only',
+    payments: [{ method: 'upi', amount: 3198, referenceId: 'UPI/98430/1122' }],
+    qrPayload: '',
+    createdAt: new Date(Date.now() - 1000 * 60 * 25).toISOString()
+  },
+  {
+    id: 'inv-1002',
+    invoiceNumber: 'INV-2026-1002',
+    orderId: 'ord-1002',
+    tenantId: 'tenant-city-retail',
+    tenantName: 'City Retail Hardware',
+    tenantAddress: '104 L.B. Shastri Road, Industrial Area, Coimbatore',
+    tenantGstin: '33AABCK1234F1Z5',
+    tenantState: 'Tamil Nadu',
+    tenantStateCode: '33',
+    customerName: 'Priya Sundaram',
+    customerPhone: '+91 94432 99887',
+    invoiceDate: new Date(Date.now() - 1000 * 60 * 65).toISOString(),
+    isInterState: false,
+    items: [
+      {
+        productId: 'prod-city-4',
+        productName: 'Philips 9W Cool Daylight LED Bulb B22 Base',
+        sku: 'LED-9W',
+        unit: 'pcs',
+        quantity: 4,
+        unitPrice: 120,
+        taxRate: 18,
+        cgstRate: 9,
+        sgstRate: 9,
+        igstRate: 0,
+        igstAmount: 0,
+        discountPercent: 0,
+        discountAmount: 0,
+        taxableAmount: 406.78,
+        cgstAmount: 36.61,
+        sgstAmount: 36.61,
+        total: 480
+      },
+      {
+        productId: 'prod-city-7',
+        productName: 'Anchor Roma 16A 3-Pin Modular Switch & Socket Combo',
+        sku: 'SW-ROM-16A',
+        unit: 'pcs',
+        quantity: 2,
+        unitPrice: 220,
+        taxRate: 18,
+        cgstRate: 9,
+        sgstRate: 9,
+        igstRate: 0,
+        igstAmount: 0,
+        discountPercent: 0,
+        discountAmount: 0,
+        taxableAmount: 372.88,
+        cgstAmount: 33.56,
+        sgstAmount: 33.56,
+        total: 440
+      }
+    ],
+    hsnSummary: [],
+    subtotal: 920,
+    totalDiscount: 0,
+    taxableAmount: 779.66,
+    totalCgst: 70.17,
+    totalSgst: 70.17,
+    totalIgst: 0,
+    totalTax: 140.34,
+    roundingAdjustment: 0,
+    grandTotal: 920,
+    grandTotalInWords: 'Nine Hundred Twenty Rupees Only',
+    payments: [{ method: 'cash', amount: 920 }],
+    qrPayload: '',
+    createdAt: new Date(Date.now() - 1000 * 60 * 65).toISOString()
+  },
+  {
+    id: 'inv-1003',
+    invoiceNumber: 'INV-2026-1003',
+    orderId: 'ord-1003',
+    tenantId: 'tenant-city-retail',
+    tenantName: 'City Retail Hardware',
+    tenantAddress: '104 L.B. Shastri Road, Industrial Area, Coimbatore',
+    tenantGstin: '33AABCK1234F1Z5',
+    tenantState: 'Tamil Nadu',
+    tenantStateCode: '33',
+    customerName: 'Murugan Textiles',
+    customerPhone: '+91 98940 44556',
+    invoiceDate: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+    isInterState: false,
+    items: [
+      {
+        productId: 'prod-city-5',
+        productName: 'Asian Paints Apex Weatherproof Emulsion White 4L',
+        sku: 'PNT-APX-4L',
+        unit: 'pack',
+        quantity: 2,
+        unitPrice: 1350,
+        taxRate: 18,
+        cgstRate: 9,
+        sgstRate: 9,
+        igstRate: 0,
+        igstAmount: 0,
+        discountPercent: 0,
+        discountAmount: 0,
+        taxableAmount: 2288.14,
+        cgstAmount: 205.93,
+        sgstAmount: 205.93,
+        total: 2700
+      },
+      {
+        productId: 'prod-city-6',
+        productName: 'Fevicol SH Synthetic Resin Wood Adhesive 1kg',
+        sku: 'ADH-SH-1K',
+        unit: 'pack',
+        quantity: 3,
+        unitPrice: 290,
+        taxRate: 18,
+        cgstRate: 9,
+        sgstRate: 9,
+        igstRate: 0,
+        igstAmount: 0,
+        discountPercent: 0,
+        discountAmount: 0,
+        taxableAmount: 737.29,
+        cgstAmount: 66.36,
+        sgstAmount: 66.36,
+        total: 870
+      }
+    ],
+    hsnSummary: [],
+    subtotal: 3570,
+    totalDiscount: 0,
+    taxableAmount: 3025.42,
+    totalCgst: 272.29,
+    totalSgst: 272.29,
+    totalIgst: 0,
+    totalTax: 544.58,
+    roundingAdjustment: 0,
+    grandTotal: 3570,
+    grandTotalInWords: 'Three Thousand Five Hundred Seventy Rupees Only',
+    payments: [{ method: 'card', amount: 3570, referenceId: 'CARD-AUTH-8821' }],
+    qrPayload: '',
+    createdAt: new Date(Date.now() - 1000 * 60 * 120).toISOString()
+  },
+  {
+    id: 'inv-1004',
+    invoiceNumber: 'INV-2026-1004',
+    orderId: 'ord-1004',
+    tenantId: 'tenant-city-retail',
+    tenantName: 'City Retail Hardware',
+    tenantAddress: '104 L.B. Shastri Road, Industrial Area, Coimbatore',
+    tenantGstin: '33AABCK1234F1Z5',
+    tenantState: 'Tamil Nadu',
+    tenantStateCode: '33',
+    customerName: 'Karthik Raja',
+    customerPhone: '+91 97890 33445',
+    invoiceDate: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+    isInterState: false,
+    items: [
+      {
+        productId: 'prod-city-3',
+        productName: 'Taparia 8-Piece Magnetic Screwdriver Set',
+        sku: 'SCR-8PC',
+        unit: 'pcs',
+        quantity: 1,
+        unitPrice: 480,
+        taxRate: 18,
+        cgstRate: 9,
+        sgstRate: 9,
+        igstRate: 0,
+        igstAmount: 0,
+        discountPercent: 0,
+        discountAmount: 0,
+        taxableAmount: 406.78,
+        cgstAmount: 36.61,
+        sgstAmount: 36.61,
+        total: 480
+      },
+      {
+        productId: 'prod-city-8',
+        productName: 'WD-40 Multi-Use Rust Remover & Lubricant Spray 400ml',
+        sku: 'WD40-400ML',
+        unit: 'pcs',
+        quantity: 1,
+        unitPrice: 390,
+        taxRate: 18,
+        cgstRate: 9,
+        sgstRate: 9,
+        igstRate: 0,
+        igstAmount: 0,
+        discountPercent: 0,
+        discountAmount: 0,
+        taxableAmount: 330.51,
+        cgstAmount: 29.75,
+        sgstAmount: 29.75,
+        total: 390
+      }
+    ],
+    hsnSummary: [],
+    subtotal: 870,
+    totalDiscount: 0,
+    taxableAmount: 737.29,
+    totalCgst: 66.36,
+    totalSgst: 66.36,
+    totalIgst: 0,
+    totalTax: 132.71,
+    roundingAdjustment: 0,
+    grandTotal: 870,
+    grandTotalInWords: 'Eight Hundred Seventy Rupees Only',
+    payments: [{ method: 'credit_khata', amount: 870 }],
+    qrPayload: '',
+    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString()
+  },
+  {
+    id: 'inv-1005',
+    invoiceNumber: 'INV-2026-1005',
+    orderId: 'ord-1005',
+    tenantId: 'tenant-city-retail',
+    tenantName: 'City Retail Hardware',
+    tenantAddress: '104 L.B. Shastri Road, Industrial Area, Coimbatore',
+    tenantGstin: '33AABCK1234F1Z5',
+    tenantState: 'Tamil Nadu',
+    tenantStateCode: '33',
+    customerName: 'Walk-in Customer',
+    customerPhone: '+91 99401 55667',
+    invoiceDate: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
+    isInterState: false,
+    items: [
+      {
+        productId: 'prod-city-9',
+        productName: 'Schneider Electric Acti9 32A Double Pole MCB',
+        sku: 'MCB-DP-32A',
+        unit: 'pcs',
+        quantity: 2,
+        unitPrice: 690,
+        taxRate: 18,
+        cgstRate: 9,
+        sgstRate: 9,
+        igstRate: 0,
+        igstAmount: 0,
+        discountPercent: 0,
+        discountAmount: 0,
+        taxableAmount: 1169.49,
+        cgstAmount: 105.25,
+        sgstAmount: 105.25,
+        total: 1380
+      }
+    ],
+    hsnSummary: [],
+    subtotal: 1380,
+    totalDiscount: 0,
+    taxableAmount: 1169.49,
+    totalCgst: 105.25,
+    totalSgst: 105.25,
+    totalIgst: 0,
+    totalTax: 210.51,
+    roundingAdjustment: 0,
+    grandTotal: 1380,
+    grandTotalInWords: 'One Thousand Three Hundred Eighty Rupees Only',
+    payments: [{ method: 'cash', amount: 1380 }],
+    qrPayload: '',
+    createdAt: new Date(Date.now() - 1000 * 60 * 240).toISOString()
+  }
+];
+
 export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { tenant } = useTenant();
   const { user } = useAuth();
@@ -115,13 +444,83 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [cart, setCart] = useState<PosOrderItem[]>([]);
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<PosCustomer | null>(null);
-  const [currentShift, setCurrentShift] = useState<RegisterShift | null>(null);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [customers, setCustomers] = useState<PosCustomer[]>([]);
+  const [currentShift, setCurrentShift] = useState<RegisterShift | null>({
+    id: 'shift-mobile-active',
+    tenantId: tenant?.id || 'tenant-city-retail',
+    registerId: 'REG-01',
+    cashierId: user?.id || 'usr-mobile-cashier',
+    cashierName: user?.name || 'Mobile Cashier',
+    startTime: new Date(Date.now() - 1000 * 60 * 195).toISOString(),
+    status: 'open',
+    startingFloat: 2000,
+    cashSales: 4850,
+    upiSales: 3200,
+    cardSales: 1400,
+    creditKhataSales: 870,
+    cashIn: 0,
+    cashOut: 0,
+    expectedCashInDrawer: 6850,
+    totalTransactions: 7,
+    voidCount: 0,
+    noSaleDrawerPopCount: 0
+  });
+  const [invoices, setInvoices] = useState<Invoice[]>(MOCK_INVOICES);
+  const [customers, setCustomers] = useState<PosCustomer[]>([
+    {
+      id: 'cust-1',
+      tenantId: tenant?.id || 'tenant-city-retail',
+      name: 'Ramesh Kumar',
+      phone: '+91 98430 11223',
+      currentBalance: 1450,
+      totalPurchases: 18500,
+      creditLimit: 5000,
+      gstin: '33AABCR1234F1Z1',
+      stateCode: '33',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'cust-2',
+      tenantId: tenant?.id || 'tenant-city-retail',
+      name: 'Priya Sundaram',
+      phone: '+91 94432 99887',
+      currentBalance: 3200,
+      totalPurchases: 9400,
+      creditLimit: 8000,
+      stateCode: '33',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'cust-3',
+      tenantId: tenant?.id || 'tenant-city-retail',
+      name: 'Murugan Textiles',
+      phone: '+91 98940 44556',
+      currentBalance: 0,
+      totalPurchases: 42000,
+      creditLimit: 15000,
+      gstin: '33AABCM9988E1Z9',
+      stateCode: '33',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'cust-4',
+      tenantId: tenant?.id || 'tenant-city-retail',
+      name: 'Karthik Raja',
+      phone: '+91 97890 33445',
+      currentBalance: 870,
+      totalPurchases: 14200,
+      creditLimit: 10000,
+      stateCode: '33',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ]);
   const [taxConfig, setTaxConfig] = useState<PosTaxConfig>(DEFAULT_TAX_CONFIG);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const tenantId = tenant?.id || 'tenant-kumar-stores';
+  const tenantId = tenant?.id || 'tenant-city-retail';
 
   // Load Initial POS Data
   const loadPosData = useCallback(async () => {
@@ -131,8 +530,14 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const data = await apiClient.pos.getInitData(tenantId);
       if (data) {
         if (data.currentShift) setCurrentShift(data.currentShift);
-        if (data.recentInvoices) setInvoices(data.recentInvoices);
-        if (data.customers) setCustomers(data.customers);
+        if (data.recentInvoices && data.recentInvoices.length > 0) {
+          setInvoices(data.recentInvoices);
+        } else {
+          setInvoices(MOCK_INVOICES);
+        }
+        if (data.customers && data.customers.length > 0) {
+          setCustomers(data.customers);
+        }
         if (data.taxConfig) setTaxConfig(data.taxConfig);
       }
     } catch {
@@ -140,64 +545,24 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCurrentShift({
         id: 'shift-mobile-active',
         tenantId,
-        registerId: 'REG-MOBILE-01',
+        registerId: 'REG-01',
         cashierId: user?.id || 'usr-mobile-cashier',
         cashierName: user?.name || 'Mobile Cashier',
-        startTime: new Date().toISOString(),
+        startTime: new Date(Date.now() - 1000 * 60 * 195).toISOString(),
         status: 'open',
-        startingFloat: 1500,
-        cashSales: 3450,
-        upiSales: 2180,
-        cardSales: 950,
-        creditKhataSales: 800,
+        startingFloat: 2000,
+        cashSales: 4850,
+        upiSales: 3200,
+        cardSales: 1400,
+        creditKhataSales: 870,
         cashIn: 0,
         cashOut: 0,
-        expectedCashInDrawer: 4950,
-        totalTransactions: 6,
+        expectedCashInDrawer: 6850,
+        totalTransactions: 7,
         voidCount: 0,
         noSaleDrawerPopCount: 0
       });
-
-      setCustomers([
-        {
-          id: 'cust-1',
-          tenantId,
-          name: 'Ramesh Kumar',
-          phone: '+91 98430 11223',
-          currentBalance: 1450,
-          totalPurchases: 18500,
-          creditLimit: 5000,
-          gstin: '33AABCR1234F1Z1',
-          stateCode: '33',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'cust-2',
-          tenantId,
-          name: 'Priya Sundaram',
-          phone: '+91 94432 99887',
-          currentBalance: 3200,
-          totalPurchases: 9400,
-          creditLimit: 8000,
-          stateCode: '33',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'cust-3',
-          tenantId,
-          name: 'Murugan Textiles',
-          phone: '+91 98940 44556',
-          currentBalance: 0,
-          totalPurchases: 42000,
-          creditLimit: 15000,
-          gstin: '33AABCM9988E1Z9',
-          stateCode: '33',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ]);
+      setInvoices(MOCK_INVOICES);
     } finally {
       setIsLoading(false);
     }

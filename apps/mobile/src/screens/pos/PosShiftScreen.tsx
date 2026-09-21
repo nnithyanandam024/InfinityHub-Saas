@@ -35,139 +35,179 @@ export const PosShiftScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     setIsShiftModalOpen(true);
   };
 
+  const formattedStartTime = currentShift
+    ? new Date(currentShift.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : '';
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Application Header */}
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+      {/* Top Application Header without subtitleBadge */}
       <AppHeader
         navigation={navigation}
         title="Register Shifts"
-        subtitleBadge={currentShift ? `Shift #${currentShift.id.slice(-4)} Active` : 'Shift Closed'}
         icon="cash"
         hideScanner
         onAvatarPress={() => navigation.navigate('PosAccountTab')}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* SHIFT STATUS BANNER */}
-        <View style={[styles.statusCard, currentShift ? styles.statusCardOpen : styles.statusCardClosed]}>
-          <View style={styles.statusRow}>
-            <View style={styles.statusIconCircle}>
-              <View style={[styles.statusDot, currentShift ? styles.statusDotOpen : styles.statusDotClosed]} />
-            </View>
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={styles.shiftCardTitle}>
-                {currentShift ? `Active Shift: ${currentShift.cashierName}` : 'No Active Shift'}
+        {/* SHIFT STATUS HERO CARD */}
+        <View style={[styles.statusHeroCard, currentShift ? styles.statusHeroOpen : styles.statusHeroClosed]}>
+          <View style={styles.statusHeroTop}>
+            <View style={styles.cashierAvatarWrap}>
+              <Text style={styles.cashierAvatarText}>
+                {currentShift?.cashierName ? currentShift.cashierName.slice(0, 2).toUpperCase() : 'POS'}
               </Text>
-              <Text style={styles.shiftCardSubtitle}>
+            </View>
+
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <View style={styles.statusHeaderRow}>
+                <Text style={styles.statusRegisterId}>
+                  {currentShift?.registerId || 'Register 01'}
+                </Text>
+                <Badge
+                  label={currentShift ? 'REGISTER OPEN' : 'REGISTER CLOSED'}
+                  variant={currentShift ? 'success' : 'muted'}
+                  size="sm"
+                />
+              </View>
+
+              <Text style={styles.cashierNameText}>
+                {currentShift ? currentShift.cashierName : 'No Active Cashier'}
+              </Text>
+
+              <Text style={styles.shiftTimeText}>
                 {currentShift
-                  ? `Opened: ${new Date(currentShift.startTime).toLocaleTimeString('en-IN')}`
-                  : 'Register drawer is closed. Open shift to accept sales.'}
+                  ? `Shift started today at ${formattedStartTime}`
+                  : 'Open register drawer to begin billing sales.'}
               </Text>
             </View>
           </View>
 
           {/* Primary Action Button */}
-          <View style={{ marginTop: 14 }}>
+          <View style={styles.heroActionWrap}>
             {currentShift ? (
               <Button
-                label="Close Shift & Print Z-Report"
+                label="Close Shift & Count Drawer"
                 variant="danger"
+                icon="close"
                 onPress={handleCloseShiftPress}
               />
             ) : (
               <Button
                 label="Open Register Shift (Enter Float)"
                 variant="primary"
+                icon="cash"
                 onPress={handleOpenShiftPress}
               />
             )}
           </View>
         </View>
 
-        {/* DRAWER BALANCE CARDS */}
         {currentShift && (
           <>
-            {/* Big Expected Drawer Cash Card */}
+            {/* DRAWER BALANCE HERO BANNER */}
             <View style={styles.expectedCashCard}>
-              <Text style={styles.expectedCardLabel}>Expected Physical Cash in Drawer</Text>
+              <View style={styles.expectedCardHeader}>
+                <View style={styles.expectedIconWrap}>
+                  <Icon name="cash" size={18} color="#FFFFFF" />
+                </View>
+                <Text style={styles.expectedCardLabel}>Expected Physical Cash in Drawer</Text>
+              </View>
+
               <Text style={styles.expectedCardAmount}>
-                ₹{currentShift.expectedCashInDrawer.toFixed(2)}
+                ₹{currentShift.expectedCashInDrawer.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </Text>
-              <Text style={styles.expectedCardSub}>
-                Starting Float (₹{currentShift.startingFloat}) + Cash Sales (₹{currentShift.cashSales}) + Cash In (₹{currentShift.cashIn}) - Cash Out (₹{currentShift.cashOut})
-              </Text>
+
+              <View style={styles.formulaStrip}>
+                <Text style={styles.formulaText}>
+                  Float ₹{currentShift.startingFloat} + Cash Sales ₹{currentShift.cashSales} + In ₹{currentShift.cashIn} - Out ₹{currentShift.cashOut}
+                </Text>
+              </View>
             </View>
 
-            {/* Shift Breakdown Metric Cards */}
+            {/* PERFORMANCE 2x2 METRICS GRID */}
             <Text style={styles.sectionTitle}>Shift Performance & Payment Split</Text>
             <View style={styles.metricsGrid}>
               <KpiCard
                 label="Starting Float"
-                value={`₹${currentShift.startingFloat}`}
+                value={`₹${currentShift.startingFloat.toLocaleString('en-IN')}`}
                 subtext="Opening cash reserve"
                 icon="cash"
                 variant="primary"
               />
               <KpiCard
                 label="Cash Sales"
-                value={`₹${currentShift.cashSales}`}
-                subtext="Drawer cash collected"
+                value={`₹${currentShift.cashSales.toLocaleString('en-IN')}`}
+                subtext="Collected in drawer"
                 icon="receipt"
                 variant="success"
               />
               <KpiCard
                 label="UPI / QR Sales"
-                value={`₹${currentShift.upiSales}`}
+                value={`₹${currentShift.upiSales.toLocaleString('en-IN')}`}
                 subtext="Direct bank transfers"
                 icon="smartphone"
                 variant="primary"
               />
               <KpiCard
                 label="Card Sales"
-                value={`₹${currentShift.cardSales}`}
+                value={`₹${currentShift.cardSales.toLocaleString('en-IN')}`}
                 subtext="EDC swipe terminal"
                 icon="creditCard"
                 variant="primary"
               />
             </View>
 
-            {/* Operations Quick Actions */}
-            <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Operations Quick Actions</Text>
+            {/* DRAWER OPERATIONS TOOLBAR */}
+            <Text style={styles.sectionTitle}>Drawer Operations</Text>
             <View style={styles.drawerActionsRow}>
               <Button
                 size="sm"
                 variant="outline"
-                label="Record Cash In / Out"
-                icon="cash"
+                label="Cash In (Add Float)"
+                icon="plus"
+                onPress={() => setIsDrawerMovementModalOpen(true)}
+                style={{ flex: 1 }}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                label="Cash Out (Payout / Drop)"
+                icon="minus"
                 onPress={() => setIsDrawerMovementModalOpen(true)}
                 style={{ flex: 1 }}
               />
             </View>
+
+            {/* SHIFT ACTIVITY SUMMARY CARD */}
+            <View style={styles.activitySummaryCard}>
+              <Text style={styles.activityCardTitle}>Shift Overview</Text>
+
+              <View style={styles.activityRow}>
+                <Text style={styles.activityLabel}>Total Transactions Completed</Text>
+                <Text style={styles.activityValue}>{currentShift.totalTransactions} Bills</Text>
+              </View>
+
+              <View style={styles.activityRow}>
+                <Text style={styles.activityLabel}>Credit (Khata) Sales</Text>
+                <Text style={styles.activityValue}>₹{currentShift.creditKhataSales.toLocaleString('en-IN')}</Text>
+              </View>
+
+              <View style={styles.activityRow}>
+                <Text style={styles.activityLabel}>Cash In / Top-ups</Text>
+                <Text style={styles.activityValue}>₹{currentShift.cashIn}</Text>
+              </View>
+
+              <View style={[styles.activityRow, { borderBottomWidth: 0 }]}>
+                <Text style={styles.activityLabel}>Cash Out / Payouts</Text>
+                <Text style={styles.activityValue}>₹{currentShift.cashOut}</Text>
+              </View>
+            </View>
           </>
         )}
-
-        {/* Shift Guidelines */}
-        <View style={styles.guidelinesCard}>
-          <Text style={styles.glTitle}>Cashier Shift Rules & Best Practices</Text>
-          <View style={styles.glRow}>
-            <Text style={styles.glBullet}>•</Text>
-            <Text style={styles.glText}>
-              Always verify your starting cash float before taking your first customer.
-            </Text>
-          </View>
-          <View style={styles.glRow}>
-            <Text style={styles.glBullet}>•</Text>
-            <Text style={styles.glText}>
-              Log every petty cash expense or safe deposit with a mandatory reason.
-            </Text>
-          </View>
-          <View style={styles.glRow}>
-            <Text style={styles.glBullet}>•</Text>
-            <Text style={styles.glText}>
-              Count physical cash carefully at close. Discrepancies are logged in the store audit log.
-            </Text>
-          </View>
-        </View>
       </ScrollView>
 
       {/* Shift Modal (Open / Close) */}
@@ -195,115 +235,120 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC'
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: theme.colors.navy
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    color: theme.colors.muted,
-    marginTop: 2
-  },
   scrollContent: {
     padding: 16,
     paddingBottom: 130
   },
-  statusCard: {
+  statusHeroCard: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    marginBottom: 14
+    marginBottom: 16,
+    ...theme.shadows.card
   },
-  statusCardOpen: {
-    backgroundColor: '#ECFDF5',
+  statusHeroOpen: {
     borderColor: '#A7F3D0'
   },
-  statusCardClosed: {
-    backgroundColor: '#FEF2F2',
+  statusHeroClosed: {
     borderColor: '#FECACA'
   },
-  statusRow: {
+  statusHeroTop: {
     flexDirection: 'row',
     alignItems: 'center'
   },
-  statusIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+  cashierAvatarWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2
+    borderWidth: 1,
+    borderColor: theme.colors.primary
   },
-  statusDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7
+  cashierAvatarText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: theme.colors.primary
   },
-  statusDotOpen: {
-    backgroundColor: theme.colors.successText
+  statusHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2
   },
-  statusDotClosed: {
-    backgroundColor: theme.colors.dangerText
+  statusRegisterId: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6
   },
-  shiftCardTitle: {
-    fontSize: 15,
+  cashierNameText: {
+    fontSize: 16,
     fontWeight: '800',
     color: theme.colors.navy
   },
-  shiftCardSubtitle: {
+  shiftTimeText: {
     fontSize: 12,
     color: theme.colors.body,
     marginTop: 2
   },
+  heroActionWrap: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border
+  },
   expectedCashCard: {
     backgroundColor: theme.colors.navy,
     borderRadius: 18,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 14,
+    padding: 18,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 4
   },
+  expectedCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6
+  },
+  expectedIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
   expectedCardLabel: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#94A3B8'
+    fontWeight: '700',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6
   },
   expectedCardAmount: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '900',
     color: '#FFFFFF',
     marginVertical: 4
   },
-  expectedCardSub: {
-    fontSize: 10,
-    color: '#CBD5E1',
-    textAlign: 'center'
+  formulaStrip: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)'
   },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 14
+  formulaText: {
+    fontSize: 11,
+    color: '#CBD5E1',
+    fontWeight: '500'
   },
   sectionTitle: {
     fontSize: 12,
@@ -313,59 +358,46 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 10
   },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 16
+  },
   drawerActionsRow: {
     flexDirection: 'row',
-    marginBottom: 14
+    gap: 10,
+    marginBottom: 16
   },
-  drawerActionBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: 14,
+  activitySummaryCard: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: theme.colors.primary,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1
-  },
-  drawerActionBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: theme.colors.primary
-  },
-  guidelinesCard: {
-    backgroundColor: theme.colors.surfaceSubtle,
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.border
+    borderColor: theme.colors.border,
+    padding: 16,
+    ...theme.shadows.card
   },
-  glTitle: {
-    fontSize: 12,
+  activityCardTitle: {
+    fontSize: 13,
     fontWeight: '800',
     color: theme.colors.navy,
-    marginBottom: 8
+    marginBottom: 12
   },
-  glRow: {
+  activityRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 6
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border
   },
-  glBullet: {
-    fontSize: 14,
-    color: theme.colors.primary,
-    marginRight: 6
+  activityLabel: {
+    fontSize: 13,
+    color: theme.colors.body
   },
-  glText: {
-    flex: 1,
-    fontSize: 11,
-    color: theme.colors.body,
-    lineHeight: 16
+  activityValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: theme.colors.navy
   }
 });
