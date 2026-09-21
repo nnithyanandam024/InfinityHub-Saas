@@ -11,6 +11,7 @@ import {
 import { theme } from '../../theme';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
+import { AppHeader } from '../../components/layout/AppHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useTenant } from '../../context/TenantContext';
 import { usePos } from '../../context/PosContext';
@@ -29,13 +30,14 @@ export const PosAccountScreen: React.FC<{ navigation: any }> = ({ navigation }) 
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Screen Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Store & Terminal Account</Text>
-        <Text style={styles.headerSubtitle}>GST registration & terminal settings</Text>
-      </View>
+      {/* Top Application Header */}
+      <AppHeader
+        navigation={navigation}
+        title="Store & Terminal"
+        subtitleBadge="Terminal Account"
+        icon="store"
+        hideScanner
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Cashier Profile Card */}
@@ -106,23 +108,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC'
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: theme.colors.navy
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    color: theme.colors.muted,
-    marginTop: 2
   },
   scrollContent: {
     padding: 16,

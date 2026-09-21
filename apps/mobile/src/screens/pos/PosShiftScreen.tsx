@@ -12,6 +12,8 @@ import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
+import { AppHeader } from '../../components/layout/AppHeader';
+import { KpiCard } from '../../components/common/KpiCard';
 import { usePos } from '../../context/PosContext';
 import { MobileShiftModal } from '../../components/pos/MobileShiftModal';
 import { MobileDrawerMovementModal } from '../../components/pos/MobileDrawerMovementModal';
@@ -35,22 +37,15 @@ export const PosShiftScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Screen Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Register Shifts & Cash Drawer</Text>
-          <Text style={styles.headerSubtitle}>
-            Cash float tracking, drawer drops & Z-report reconciliation
-          </Text>
-        </View>
-        <Badge
-          label={currentShift ? 'REGISTER OPEN' : 'REGISTER CLOSED'}
-          variant={currentShift ? 'success' : 'danger'}
-          size="sm"
-        />
-      </View>
+      {/* Top Application Header */}
+      <AppHeader
+        navigation={navigation}
+        title="Register Shifts"
+        subtitleBadge={currentShift ? `Shift #${currentShift.id.slice(-4)} Active` : 'Shift Closed'}
+        icon="cash"
+        hideScanner
+        onAvatarPress={() => navigation.navigate('PosAccountTab')}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* SHIFT STATUS BANNER */}
@@ -104,55 +99,49 @@ export const PosShiftScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             </View>
 
             {/* Shift Breakdown Metric Cards */}
+            <Text style={styles.sectionTitle}>Shift Performance & Payment Split</Text>
             <View style={styles.metricsGrid}>
-              <View style={styles.metricCard}>
-                <Text style={styles.metricLabel}>Starting Float</Text>
-                <Text style={styles.metricVal}>₹{currentShift.startingFloat}</Text>
-              </View>
-
-              <View style={styles.metricCard}>
-                <Text style={styles.metricLabel}>Cash Sales</Text>
-                <Text style={[styles.metricVal, { color: '#059669' }]}>
-                  ₹{currentShift.cashSales}
-                </Text>
-              </View>
-
-              <View style={styles.metricCard}>
-                <Text style={styles.metricLabel}>UPI Sales</Text>
-                <Text style={[styles.metricVal, { color: theme.colors.primary }]}>
-                  ₹{currentShift.upiSales}
-                </Text>
-              </View>
-
-              <View style={styles.metricCard}>
-                <Text style={styles.metricLabel}>Card / EDC</Text>
-                <Text style={styles.metricVal}>₹{currentShift.cardSales}</Text>
-              </View>
-
-              <View style={styles.metricCard}>
-                <Text style={styles.metricLabel}>Cash Paid-In</Text>
-                <Text style={[styles.metricVal, { color: '#059669' }]}>
-                  +₹{currentShift.cashIn}
-                </Text>
-              </View>
-
-              <View style={styles.metricCard}>
-                <Text style={styles.metricLabel}>Cash Paid-Out</Text>
-                <Text style={[styles.metricVal, { color: '#DC2626' }]}>
-                  -₹{currentShift.cashOut}
-                </Text>
-              </View>
+              <KpiCard
+                label="Starting Float"
+                value={`₹${currentShift.startingFloat}`}
+                subtext="Opening cash reserve"
+                icon="cash"
+                variant="primary"
+              />
+              <KpiCard
+                label="Cash Sales"
+                value={`₹${currentShift.cashSales}`}
+                subtext="Drawer cash collected"
+                icon="receipt"
+                variant="success"
+              />
+              <KpiCard
+                label="UPI / QR Sales"
+                value={`₹${currentShift.upiSales}`}
+                subtext="Direct bank transfers"
+                icon="smartphone"
+                variant="primary"
+              />
+              <KpiCard
+                label="Card Sales"
+                value={`₹${currentShift.cardSales}`}
+                subtext="EDC swipe terminal"
+                icon="creditCard"
+                variant="primary"
+              />
             </View>
 
-            {/* Drawer Management Action Buttons */}
+            {/* Operations Quick Actions */}
+            <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Operations Quick Actions</Text>
             <View style={styles.drawerActionsRow}>
-              <TouchableOpacity
-                style={styles.drawerActionBtn}
+              <Button
+                size="sm"
+                variant="outline"
+                label="Record Cash In / Out"
+                icon="cash"
                 onPress={() => setIsDrawerMovementModalOpen(true)}
-              >
-                <Icon name="cash" size={16} color={theme.colors.primary} />
-                <Text style={styles.drawerActionBtnText}>Record Cash In / Out</Text>
-              </TouchableOpacity>
+                style={{ flex: 1 }}
+              />
             </View>
           </>
         )}
@@ -316,23 +305,13 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 14
   },
-  metricCard: {
-    width: '48.5%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  metricLabel: {
-    fontSize: 11,
-    color: theme.colors.muted
-  },
-  metricVal: {
-    fontSize: 16,
+  sectionTitle: {
+    fontSize: 12,
     fontWeight: '800',
     color: theme.colors.navy,
-    marginTop: 2
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 10
   },
   drawerActionsRow: {
     flexDirection: 'row',

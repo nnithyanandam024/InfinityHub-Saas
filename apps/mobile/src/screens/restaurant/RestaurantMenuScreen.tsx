@@ -12,10 +12,13 @@ import {
 } from 'react-native';
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
+import { Badge } from '../../components/common/Badge';
+import { AppHeader } from '../../components/layout/AppHeader';
+import { EmptyStateCard } from '../../components/common/EmptyStateCard';
 import { useRestaurant } from '../../context/RestaurantContext';
 import { RestaurantMenuItem } from '@infinityhub/types';
 
-export const RestaurantMenuScreen: React.FC<{ navigation: any }> = () => {
+export const RestaurantMenuScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { menuItems, toggleMenuItemAvailability } = useRestaurant();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -112,65 +115,15 @@ export const RestaurantMenuScreen: React.FC<{ navigation: any }> = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Menu & Kitchen 86 Control</Text>
-        <Text style={styles.subtitle}>Toggle dish availability in real-time on Captain Pad</Text>
-      </View>
-
-      {/* KPI Stats Cards */}
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.total}</Text>
-          <Text style={styles.statLabel}>Total Dishes</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={[styles.statNumber, { color: theme.colors.successText }]}>{stats.inStock}</Text>
-          <Text style={styles.statLabel}>In Stock</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={[styles.statNumber, { color: theme.colors.dangerText }]}>{stats.outOfStock}</Text>
-          <Text style={styles.statLabel}>86-ed Out</Text>
-        </View>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchWrap}>
-        <Icon name="search" size={16} color={theme.colors.muted} />
-        <TextInput
-          style={styles.searchInput}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search dishes by name or item code..."
-          placeholderTextColor={theme.colors.muted}
-        />
-        {searchQuery ? (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Icon name="close" size={16} color={theme.colors.muted} />
-          </TouchableOpacity>
-        ) : null}
-      </View>
-
-      {/* Category Pills */}
-      <View style={styles.categoryScrollWrap}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
-          {categories.map(cat => (
-            <TouchableOpacity
-              key={cat}
-              style={[styles.catPill, selectedCategory === cat && styles.catPillActive]}
-              onPress={() => setSelectedCategory(cat)}
-            >
-              <Text style={[styles.catPillText, selectedCategory === cat && styles.catPillTextActive]}>
-                {cat === 'all' ? 'All' : cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+      {/* Top Application Header */}
+      <AppHeader
+        navigation={navigation}
+        title="Menu & 86 Control"
+        subtitleBadge={`${stats.inStock} Available · ${stats.outOfStock} 86'd`}
+        icon="dish"
+        hideScanner
+        onAvatarPress={() => navigation.navigate('RestaurantAccountTab')}
+      />
 
       {/* Dishes List */}
       <FlatList
@@ -179,6 +132,73 @@ export const RestaurantMenuScreen: React.FC<{ navigation: any }> = () => {
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View style={styles.headerSection}>
+            {/* Menu Availability Summary Banner */}
+            <View style={styles.bannerCard}>
+              <Text style={styles.bannerSubhead}>MENU AVAILABILITY SUMMARY</Text>
+              <View style={styles.bannerMainRow}>
+                <Text style={styles.bannerTitle}>
+                  {stats.inStock} of {stats.total} Dishes In Stock
+                </Text>
+                <Badge
+                  label={stats.outOfStock === 0 ? 'ALL READY' : `${stats.outOfStock} 86-ED`}
+                  variant={stats.outOfStock > 0 ? 'warning' : 'success'}
+                  size="sm"
+                />
+              </View>
+
+              <Text style={styles.bannerMeta}>
+                Disabled items are automatically marked unavailable on Captain Pad
+              </Text>
+            </View>
+
+            {/* Search Bar */}
+            <View style={styles.searchWrap}>
+              <Icon name="search" size={16} color={theme.colors.muted} />
+              <TextInput
+                style={styles.searchInput}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Search dishes by name or code..."
+                placeholderTextColor={theme.colors.muted}
+              />
+              {searchQuery ? (
+                <TouchableOpacity onPress={() => setSearchQuery('')}>
+                  <Icon name="close" size={16} color={theme.colors.muted} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            {/* Category Pills */}
+            <View style={styles.categoryScrollWrap}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
+                {categories.map(cat => (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[styles.catPill, selectedCategory === cat && styles.catPillActive]}
+                    onPress={() => setSelectedCategory(cat)}
+                  >
+                    <Text style={[styles.catPillText, selectedCategory === cat && styles.catPillTextActive]}>
+                      {cat === 'all' ? 'All Dishes' : cat}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            <Text style={styles.sectionHeadingTitle}>Menu Dishes Catalog</Text>
+          </View>
+        }
+        ListEmptyComponent={
+          <EmptyStateCard
+            icon="dish"
+            title="No dishes found"
+            subtitle={searchQuery ? `No dishes match "${searchQuery}"` : "No menu items available in this category."}
+            actionLabel={searchQuery ? "Clear Search" : undefined}
+            onAction={searchQuery ? () => setSearchQuery('') : undefined}
+          />
+        }
       />
     </SafeAreaView>
   );
@@ -189,49 +209,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   },
-  header: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
+  headerSection: {
+    marginBottom: 4
+  },
+  bannerCard: {
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
+    borderRadius: theme.radii.card,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: 12,
+    ...theme.shadows.card
   },
-  title: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: theme.colors.navy
-  },
-  subtitle: {
-    fontSize: 11,
-    color: theme.colors.muted,
-    marginTop: 2
-  },
-  statsRow: {
-    flexDirection: 'row',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: 10,
-    gap: 8,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: theme.colors.surfaceSubtle,
-    borderRadius: theme.radii.sm,
-    paddingVertical: 8,
-    alignItems: 'center'
-  },
-  statNumber: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: theme.colors.navy
-  },
-  statLabel: {
+  bannerSubhead: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '800',
     color: theme.colors.muted,
-    marginTop: 2
+    letterSpacing: 0.8,
+    textTransform: 'uppercase'
+  },
+  bannerMainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    marginBottom: 4
+  },
+  bannerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: theme.colors.navy,
+    letterSpacing: -0.3
+  },
+  bannerMeta: {
+    fontSize: 11,
+    color: theme.colors.muted
+  },
+  sectionHeadingTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: theme.colors.navy,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 12,
+    marginBottom: 8
   },
   searchWrap: {
     flexDirection: 'row',

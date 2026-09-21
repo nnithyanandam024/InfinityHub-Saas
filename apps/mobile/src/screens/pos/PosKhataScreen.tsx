@@ -12,6 +12,9 @@ import {
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
 import { Badge } from '../../components/common/Badge';
+import { Button } from '../../components/common/Button';
+import { AppHeader } from '../../components/layout/AppHeader';
+import { EmptyStateCard } from '../../components/common/EmptyStateCard';
 import { usePos } from '../../context/PosContext';
 import { PosCustomer } from '@infinityhub/types';
 import { MobileKhataPaymentModal } from '../../components/pos/MobileKhataPaymentModal';
@@ -40,21 +43,26 @@ export const PosKhataScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   const renderCustomerCard = ({ item }: { item: PosCustomer }) => {
     const hasDebt = item.currentBalance > 0;
     const utilizationPct = Math.min(100, Math.round((item.currentBalance / item.creditLimit) * 100));
+    const initials = item.name.slice(0, 2).toUpperCase();
 
     return (
       <View style={styles.customerCard}>
         {/* Header Row */}
         <View style={styles.cardHeader}>
-          <View style={{ flex: 1 }}>
+          <View style={styles.avatarPill}>
+            <Text style={styles.avatarText}>{initials}</Text>
+          </View>
+
+          <View style={{ flex: 1, marginLeft: 10, marginRight: 8 }}>
             <Text style={styles.customerName}>{item.name}</Text>
             <Text style={styles.customerPhone}>{item.phone}</Text>
-            {item.gstin && (
+            {item.gstin ? (
               <Text style={styles.customerGstin}>GSTIN: {item.gstin}</Text>
-            )}
+            ) : null}
           </View>
 
           <View style={styles.balanceBadgeCol}>
-            <Text style={styles.balanceLabel}>Outstanding Khata</Text>
+            <Text style={styles.balanceLabel}>Outstanding</Text>
             <Text style={[styles.balanceAmount, hasDebt ? styles.debtText : styles.clearText]}>
               ₹{item.currentBalance.toFixed(2)}
             </Text>
@@ -80,13 +88,14 @@ export const PosKhataScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
         {/* Actions Row */}
         <View style={styles.cardActions}>
-          <TouchableOpacity
-            style={styles.recordPaymentBtn}
+          <Button
+            size="sm"
+            variant="outline"
+            label="Collect Payment"
+            icon="wallet"
             onPress={() => setSelectedCustomerForPayment(item)}
-          >
-            <Icon name="wallet" size={14} color={theme.colors.primary} />
-            <Text style={styles.recordPaymentText}>Record Repayment</Text>
-          </TouchableOpacity>
+            style={{ width: '100%' }}
+          />
         </View>
       </View>
     );
@@ -94,45 +103,15 @@ export const PosKhataScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Screen Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Customer Khata (Credit Ledger)</Text>
-          <Text style={styles.headerSubtitle}>
-            Credit customers, payment collection & balance tracking
-          </Text>
-        </View>
-      </View>
-
-      {/* Outstanding Summary Banner */}
-      <View style={styles.summaryBanner}>
-        <View>
-          <Text style={styles.summaryBannerLabel}>Total Market Credit Outstanding</Text>
-          <Text style={styles.summaryBannerAmount}>₹{totalOutstandingDue.toFixed(2)}</Text>
-        </View>
-        <View style={styles.customerCountBadge}>
-          <Text style={styles.customerCountText}>{customers.length} Accounts</Text>
-        </View>
-      </View>
-
-      {/* Search Input */}
-      <View style={styles.searchWrap}>
-        <Icon name="search" size={16} color={theme.colors.muted} style={{ marginLeft: 10 }} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search customer by name or phone..."
-          placeholderTextColor={theme.colors.muted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 6 }}>
-            <Icon name="close" size={14} color={theme.colors.muted} />
-          </TouchableOpacity>
-        )}
-      </View>
+      {/* Top Application Header */}
+      <AppHeader
+        navigation={navigation}
+        title="Customer Khata"
+        subtitleBadge={`${customers.length} Credit Accounts`}
+        icon="wallet"
+        hideScanner
+        onAvatarPress={() => navigation.navigate('PosAccountTab')}
+      />
 
       {/* Customer List */}
       <FlatList
@@ -141,6 +120,49 @@ export const PosKhataScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         renderItem={renderCustomerCard}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View style={styles.headerSection}>
+            {/* Outstanding Summary Banner */}
+            <View style={styles.bannerCard}>
+              <Text style={styles.bannerSubhead}>TOTAL MARKET CREDIT OUTSTANDING</Text>
+              <View style={styles.bannerMainRow}>
+                <Text style={styles.bannerAmount}>₹{totalOutstandingDue.toFixed(2)}</Text>
+                <Badge label={`${customers.length} Accounts`} variant="warning" size="sm" />
+              </View>
+              <Text style={styles.bannerMeta}>
+                Uncollected store customer ledger credit balance
+              </Text>
+            </View>
+
+            {/* Search Input */}
+            <View style={styles.searchWrap}>
+              <Icon name="search" size={16} color={theme.colors.muted} style={{ marginLeft: 10 }} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search customer by name or phone..."
+                placeholderTextColor={theme.colors.muted}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 6 }}>
+                  <Icon name="close" size={14} color={theme.colors.muted} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <Text style={styles.sectionTitle}>Active Customer Accounts</Text>
+          </View>
+        }
+        ListEmptyComponent={
+          <EmptyStateCard
+            icon="wallet"
+            title="No credit accounts found"
+            subtitle={searchQuery ? `No customer found matching "${searchQuery}"` : "Customer credit balances will be listed here."}
+            actionLabel={searchQuery ? "Clear Search" : undefined}
+            onAction={searchQuery ? () => setSearchQuery('') : undefined}
+          />
+        }
       />
 
       {/* Khata Payment Modal */}
@@ -159,64 +181,71 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC'
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  headerSection: {
+    marginBottom: 6
+  },
+  bannerCard: {
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: theme.colors.navy
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    color: theme.colors.muted,
-    marginTop: 2
-  },
-  summaryBanner: {
-    backgroundColor: theme.colors.navy,
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 16,
+    borderRadius: theme.radii.card,
     padding: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: 12,
+    ...theme.shadows.card
+  },
+  bannerSubhead: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: theme.colors.muted,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase'
+  },
+  bannerMainRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    marginTop: 4,
+    marginBottom: 4
   },
-  summaryBannerLabel: {
+  bannerAmount: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: theme.colors.dangerText,
+    letterSpacing: -0.5
+  },
+  bannerMeta: {
     fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '600'
+    color: theme.colors.muted
   },
-  summaryBannerAmount: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    marginTop: 2
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: theme.colors.navy,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 8
   },
-  customerCountBadge: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8
+  avatarPill: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: theme.colors.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
-  customerCountText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FFFFFF'
+  avatarText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: theme.colors.primary
   },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.border
+    borderColor: theme.colors.border,
+    marginBottom: 14
   },
   searchInput: {
     flex: 1,
@@ -226,8 +255,8 @@ const styles = StyleSheet.create({
     color: theme.colors.navy
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+    padding: 16,
+    paddingBottom: 32,
     gap: 12
   },
   customerCard: {

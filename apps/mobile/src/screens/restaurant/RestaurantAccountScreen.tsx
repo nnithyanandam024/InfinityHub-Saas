@@ -13,6 +13,9 @@ import {
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
 import { Button } from '../../components/common/Button';
+import { Badge } from '../../components/common/Badge';
+import { AppHeader } from '../../components/layout/AppHeader';
+import { KpiCard } from '../../components/common/KpiCard';
 import { useRestaurant } from '../../context/RestaurantContext';
 import { useTenant } from '../../context/TenantContext';
 import { useAuth } from '../../context/AuthContext';
@@ -31,6 +34,15 @@ export const RestaurantAccountScreen: React.FC<{ navigation: any }> = ({ navigat
   const settledOrders = orders.filter(o => o.orderStatus === 'settled');
   const todaySales = settledOrders.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
 
+  const userInitials = user?.name
+    ? user.name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase()
+    : 'CP';
+
   const handleLogout = () => {
     Alert.alert(
       'Sign Out',
@@ -48,47 +60,65 @@ export const RestaurantAccountScreen: React.FC<{ navigation: any }> = ({ navigat
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.storeAvatar}>
-          <Icon name="utensils" size={22} color="#FFFFFF" />
-        </View>
-
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={styles.storeName}>{tenant?.name || 'Gourmet Bistro'}</Text>
-          <Text style={styles.userRole}>Staff User: {user?.name || 'Rajesh'} ({user?.role || 'CAPTAIN'})</Text>
-        </View>
-      </View>
+      {/* Top Application Header */}
+      <AppHeader
+        navigation={navigation}
+        title={tenant?.name || 'Restaurant Workspace'}
+        subtitleBadge={`${user?.role || 'Staff'} Account`}
+        icon="utensils"
+        hideScanner
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* User Identity Card */}
+        <View style={styles.userCard}>
+          <View style={styles.avatarWrap}>
+            <Text style={styles.avatarText}>{userInitials}</Text>
+          </View>
+          <View style={{ flex: 1, marginLeft: 14 }}>
+            <Text style={styles.userName}>{user?.name || 'Staff Captain'}</Text>
+            <Text style={styles.userEmail}>{user?.email || 'captain@restaurant.in'}</Text>
+            <View style={{ marginTop: 6 }}>
+              <Badge
+                label={user?.role === 'SUPER_ADMIN' ? 'Platform Admin' : user?.role === 'MANAGER' ? 'Floor Manager' : 'Restaurant Captain'}
+                variant={user?.role === 'SUPER_ADMIN' ? 'danger' : 'primary'}
+                size="sm"
+              />
+            </View>
+          </View>
+        </View>
+
         {/* Restaurant KPIs */}
         <Text style={styles.sectionTitle}>Shift Summary & Metrics</Text>
         <View style={styles.kpiGrid}>
-          <View style={styles.kpiCard}>
-            <Text style={styles.kpiLabel}>Occupancy</Text>
-            <Text style={styles.kpiValue}>{occupancyStats.occupancyRate}%</Text>
-            <Text style={styles.kpiSub}>{occupancyStats.occupiedCount} / {occupancyStats.totalTables} Tables</Text>
-          </View>
-
-          <View style={styles.kpiCard}>
-            <Text style={styles.kpiLabel}>KOTs Fired</Text>
-            <Text style={styles.kpiValue}>{kots.length}</Text>
-            <Text style={styles.kpiSub}>Line tickets today</Text>
-          </View>
-
-          <View style={styles.kpiCard}>
-            <Text style={styles.kpiLabel}>Settled Checks</Text>
-            <Text style={styles.kpiValue}>{settledOrders.length}</Text>
-            <Text style={styles.kpiSub}>Closed dining tables</Text>
-          </View>
-
-          <View style={styles.kpiCard}>
-            <Text style={styles.kpiLabel}>Today Revenue</Text>
-            <Text style={[styles.kpiValue, { color: theme.colors.primary }]}>₹{todaySales}</Text>
-            <Text style={styles.kpiSub}>Gross dining collection</Text>
-          </View>
+          <KpiCard
+            label="Occupancy"
+            value={`${occupancyStats.occupancyRate}%`}
+            subtext={`${occupancyStats.occupiedCount} / ${occupancyStats.totalTables} Tables`}
+            icon="table"
+            variant="primary"
+          />
+          <KpiCard
+            label="KOTs Fired"
+            value={kots.length}
+            subtext="Line tickets today"
+            icon="chefHat"
+            variant="primary"
+          />
+          <KpiCard
+            label="Settled Checks"
+            value={settledOrders.length}
+            subtext="Closed dining tables"
+            icon="receipt"
+            variant="success"
+          />
+          <KpiCard
+            label="Today Revenue"
+            value={`₹${todaySales}`}
+            subtext="Gross dining collection"
+            icon="cash"
+            variant="primary"
+          />
         </View>
 
         {/* Anti-Theft Void & Waste Register */}
@@ -151,72 +181,60 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   },
-  header: {
+  userCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
+    borderRadius: theme.radii.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: 16,
+    marginBottom: 14,
+    ...theme.shadows.card
   },
-  storeAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.primary,
+  avatarWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.primaryTint,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center'
   },
-  storeName: {
+  avatarText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: theme.colors.primary
+  },
+  userName: {
     fontSize: 16,
     fontWeight: '800',
     color: theme.colors.navy
   },
-  userRole: {
-    fontSize: 11,
+  userEmail: {
+    fontSize: 12,
     color: theme.colors.muted,
     marginTop: 2
   },
   scrollContent: {
-    padding: theme.spacing.lg,
-    paddingBottom: 32
+    padding: 16,
+    paddingBottom: 36
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
     color: theme.colors.navy,
     marginBottom: 8,
     marginTop: 14,
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    letterSpacing: 0.8
   },
   kpiGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8
-  },
-  kpiCard: {
-    width: '48.5%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: theme.radii.md,
-    padding: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  kpiLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: theme.colors.muted
-  },
-  kpiValue: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: theme.colors.navy,
-    marginVertical: 2
-  },
-  kpiSub: {
-    fontSize: 10,
-    color: theme.colors.body
+    gap: 8,
+    marginBottom: 12
   },
   card: {
     backgroundColor: '#FFFFFF',

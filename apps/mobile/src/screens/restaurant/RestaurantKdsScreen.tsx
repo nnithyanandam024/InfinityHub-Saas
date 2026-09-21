@@ -12,10 +12,13 @@ import {
 } from 'react-native';
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
+import { Button } from '../../components/common/Button';
+import { AppHeader } from '../../components/layout/AppHeader';
+import { EmptyStateCard } from '../../components/common/EmptyStateCard';
 import { useRestaurant } from '../../context/RestaurantContext';
 import { RestaurantKot, KitchenStation, KotItemStatus } from '@infinityhub/types';
 
-export const RestaurantKdsScreen: React.FC<{ navigation: any }> = () => {
+export const RestaurantKdsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { kots, updateKotItemStatus, bumpKot } = useRestaurant();
   const [selectedStation, setSelectedStation] = useState<string>('all');
 
@@ -124,15 +127,16 @@ export const RestaurantKdsScreen: React.FC<{ navigation: any }> = () => {
           ))}
         </View>
 
-        {/* Card Footer Bump All Button */}
+        {/* Bottom Actions */}
         <View style={styles.ticketFooter}>
-          <TouchableOpacity
-            style={styles.bumpAllBtn}
+          <Button
+            size="sm"
+            variant="primary"
+            label="Bump Entire Ticket Ready"
+            icon="check"
             onPress={() => handleBumpAll(item.id)}
-          >
-            <Icon name="check" size={14} color="#FFFFFF" />
-            <Text style={styles.bumpAllText}>Bump Entire Ticket Ready</Text>
-          </TouchableOpacity>
+            style={{ width: '100%' }}
+          />
         </View>
       </View>
     );
@@ -140,19 +144,15 @@ export const RestaurantKdsScreen: React.FC<{ navigation: any }> = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Kitchen Display System</Text>
-          <Text style={styles.subtitle}>Real-time line orders & station bump bar</Text>
-        </View>
-
-        <View style={styles.activePill}>
-          <Text style={styles.activePillText}>{filteredKots.length} Active Tickets</Text>
-        </View>
-      </View>
+      {/* Top Application Header */}
+      <AppHeader
+        navigation={navigation}
+        title="Kitchen Display (KDS)"
+        subtitleBadge={`${filteredKots.length} Active Tickets`}
+        icon="chefHat"
+        hideScanner
+        onAvatarPress={() => navigation.navigate('RestaurantAccountTab')}
+      />
 
       {/* Station Selector Bar */}
       <View style={styles.stationScrollWrap}>
@@ -179,11 +179,11 @@ export const RestaurantKdsScreen: React.FC<{ navigation: any }> = () => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <Icon name="chefHat" size={36} color={theme.colors.muted} />
-            <Text style={styles.emptyTitle}>Kitchen Line Clear</Text>
-            <Text style={styles.emptySubtitle}>All dispatched orders have been cooked and served.</Text>
-          </View>
+          <EmptyStateCard
+            icon="chefHat"
+            title="Kitchen Line Clear"
+            subtitle="All dispatched orders have been cooked and served."
+          />
         }
       />
     </SafeAreaView>

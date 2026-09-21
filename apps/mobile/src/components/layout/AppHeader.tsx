@@ -2,15 +2,31 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
-import { Icon } from '../common/Icon';
+import { Icon, IconName } from '../common/Icon';
 import { useTenant } from '../../context/TenantContext';
 import { useAuth } from '../../context/AuthContext';
 
-interface AppHeaderProps {
+export interface AppHeaderProps {
   navigation?: any;
+  title?: string;
+  subtitleBadge?: string;
+  icon?: IconName;
+  onBadgePress?: () => void;
+  rightAction?: React.ReactNode;
+  hideScanner?: boolean;
+  onAvatarPress?: () => void;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ navigation }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({
+  navigation,
+  title,
+  subtitleBadge,
+  icon = 'store',
+  onBadgePress,
+  rightAction,
+  hideScanner = false,
+  onAvatarPress
+}) => {
   const localNav = useNavigation<any>();
   const nav = navigation || localNav;
   const { tenant } = useTenant();
@@ -25,41 +41,66 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ navigation }) => {
       .toUpperCase()
     : 'OP';
 
+  const displayTitle = title || tenant.name;
+  const displayBadge =
+    subtitleBadge ||
+    (user?.role === 'SUPER_ADMIN' ? 'Platform Admin' : `${tenant.planName || 'Starter'} Plan`);
+
+  const handleAvatarPress = () => {
+    if (onAvatarPress) {
+      onAvatarPress();
+    } else {
+      nav?.navigate('ProfileTab');
+    }
+  };
+
   return (
     <View style={styles.header}>
       {/* Store Identity */}
       <View style={styles.storeInfoWrap}>
         <View style={styles.storeIconWrap}>
-          <Icon name="store" size={16} color={theme.colors.primary} />
+          <Icon name={icon} size={16} color={theme.colors.primary} />
         </View>
         <View style={styles.storeTextWrap}>
           <Text style={styles.storeName} numberOfLines={1}>
-            {tenant.name}
+            {displayTitle}
           </Text>
           <View style={styles.badgeRow}>
-            <View style={styles.planPill}>
-              <Text style={styles.planPillText}>
-                {user?.role === 'SUPER_ADMIN' ? 'Platform Admin' : `${tenant.planName || 'Starter'} Plan`}
-              </Text>
-            </View>
+            {onBadgePress ? (
+              <TouchableOpacity
+                style={styles.planPill}
+                onPress={onBadgePress}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.planPillText}>{displayBadge}</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.planPill}>
+                <Text style={styles.planPillText}>{displayBadge}</Text>
+              </View>
+            )}
           </View>
         </View>
       </View>
 
-      {/* Right Actions: Quick Scanner Shortcut + Profile Avatar */}
+      {/* Right Actions: Quick Shortcut + Profile Avatar */}
       <View style={styles.rightActions}>
-        <TouchableOpacity
-          style={styles.iconActionBtn}
-          onPress={() => nav?.navigate('Scanner')}
-          activeOpacity={0.75}
-          accessibilityLabel="Open Barcode Scanner"
-        >
-          <Icon name="barcode" size={18} color={theme.colors.navy} />
-        </TouchableOpacity>
+        {rightAction ? (
+          rightAction
+        ) : !hideScanner ? (
+          <TouchableOpacity
+            style={styles.iconActionBtn}
+            onPress={() => nav?.navigate('Scanner')}
+            activeOpacity={0.75}
+            accessibilityLabel="Open Barcode Scanner"
+          >
+            <Icon name="barcode" size={18} color={theme.colors.navy} />
+          </TouchableOpacity>
+        ) : null}
 
         <TouchableOpacity
           style={styles.avatarBtn}
-          onPress={() => nav?.navigate('ProfileTab')}
+          onPress={handleAvatarPress}
           activeOpacity={0.8}
           accessibilityLabel="View Account"
         >

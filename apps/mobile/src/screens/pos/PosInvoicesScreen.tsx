@@ -12,6 +12,9 @@ import {
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
 import { Badge } from '../../components/common/Badge';
+import { Button } from '../../components/common/Button';
+import { AppHeader } from '../../components/layout/AppHeader';
+import { EmptyStateCard } from '../../components/common/EmptyStateCard';
 import { usePos } from '../../context/PosContext';
 import { Invoice } from '@infinityhub/types';
 import { MobileSalesReturnModal } from '../../components/pos/MobileSalesReturnModal';
@@ -20,6 +23,10 @@ export const PosInvoicesScreen: React.FC<{ navigation: any }> = ({ navigation })
   const { invoices } = usePos();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedInvoiceForReturn, setSelectedInvoiceForReturn] = useState<Invoice | null>(null);
+
+  const totalCollections = useMemo(() => {
+    return invoices.reduce((sum, inv) => sum + inv.grandTotal, 0);
+  }, [invoices]);
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter(inv => {
@@ -93,20 +100,22 @@ export const PosInvoicesScreen: React.FC<{ navigation: any }> = ({ navigation })
 
         {/* Action Buttons */}
         <View style={styles.actionButtonsRow}>
-          <TouchableOpacity
-            style={styles.viewReceiptBtn}
+          <Button
+            size="sm"
+            variant="outline"
+            label="View Receipt"
+            icon="receipt"
             onPress={() => navigation.navigate('PosReceipt', { invoice: item })}
-          >
-            <Icon name="receipt" size={14} color={theme.colors.primary} />
-            <Text style={styles.viewReceiptText}>View & Print Receipt</Text>
-          </TouchableOpacity>
+            style={{ flex: 1, marginRight: 8 }}
+          />
 
-          <TouchableOpacity
-            style={styles.returnBtn}
+          <Button
+            size="sm"
+            variant="outline"
+            label="Sales Return"
             onPress={() => setSelectedInvoiceForReturn(item)}
-          >
-            <Text style={styles.returnBtnText}>Sales Return</Text>
-          </TouchableOpacity>
+            style={{ minWidth: 100 }}
+          />
         </View>
       </View>
     );
@@ -114,32 +123,15 @@ export const PosInvoicesScreen: React.FC<{ navigation: any }> = ({ navigation })
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Screen Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Invoices & Sales Register</Text>
-        <Text style={styles.headerSubtitle}>
-          Rule 46 CGST compliant sales receipts & returns
-        </Text>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchWrap}>
-        <Icon name="search" size={16} color={theme.colors.muted} style={{ marginLeft: 10 }} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by Invoice #, Customer or Phone..."
-          placeholderTextColor={theme.colors.muted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 6 }}>
-            <Icon name="close" size={14} color={theme.colors.muted} />
-          </TouchableOpacity>
-        )}
-      </View>
+      {/* Top Application Header */}
+      <AppHeader
+        navigation={navigation}
+        title="Invoices & Register"
+        subtitleBadge={`${invoices.length} Bills Recorded`}
+        icon="receipt"
+        hideScanner
+        onAvatarPress={() => navigation.navigate('PosAccountTab')}
+      />
 
       {/* Invoices List */}
       <FlatList
@@ -148,14 +140,48 @@ export const PosInvoicesScreen: React.FC<{ navigation: any }> = ({ navigation })
         renderItem={renderInvoiceCard}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <Icon name="receipt" size={40} color={theme.colors.muted} />
-            <Text style={styles.emptyTitle}>No Invoices Found</Text>
-            <Text style={styles.emptySubtitle}>
-              Completed retail checkout orders will appear here in the sales register.
-            </Text>
+        ListHeaderComponent={
+          <View style={styles.headerSection}>
+            {/* Summary Performance Banner */}
+            <View style={styles.bannerCard}>
+              <Text style={styles.bannerSubhead}>TOTAL REGISTER PERFORMANCE</Text>
+              <View style={styles.bannerMainRow}>
+                <Text style={styles.bannerTotal}>₹{totalCollections.toFixed(2)}</Text>
+                <Badge label={`${invoices.length} Bills`} variant="primary" size="sm" />
+              </View>
+              <Text style={styles.bannerMeta}>
+                Rule 46 CGST Compliant Digital Sales Register
+              </Text>
+            </View>
+
+            {/* Search Bar */}
+            <View style={styles.searchWrap}>
+              <Icon name="search" size={16} color={theme.colors.muted} style={{ marginLeft: 10 }} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search by Invoice #, Customer or Phone..."
+                placeholderTextColor={theme.colors.muted}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 6 }}>
+                  <Icon name="close" size={14} color={theme.colors.muted} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <Text style={styles.sectionTitle}>Recent Invoices</Text>
           </View>
+        }
+        ListEmptyComponent={
+          <EmptyStateCard
+            icon="receipt"
+            title="No invoices found"
+            subtitle={searchQuery ? `No invoices match "${searchQuery}"` : "Completed retail checkout orders will appear here in the sales register."}
+            actionLabel={searchQuery ? "Clear Search" : undefined}
+            onAction={searchQuery ? () => setSearchQuery('') : undefined}
+          />
         }
       />
 
@@ -175,32 +201,58 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC'
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  headerSection: {
+    marginBottom: 6
+  },
+  bannerCard: {
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
+    borderRadius: theme.radii.card,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: 12,
+    ...theme.shadows.card
   },
-  headerTitle: {
-    fontSize: 18,
+  bannerSubhead: {
+    fontSize: 10,
     fontWeight: '800',
-    color: theme.colors.navy
-  },
-  headerSubtitle: {
-    fontSize: 12,
     color: theme.colors.muted,
-    marginTop: 2
+    letterSpacing: 0.8,
+    textTransform: 'uppercase'
+  },
+  bannerMainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    marginBottom: 4
+  },
+  bannerTotal: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: theme.colors.navy,
+    letterSpacing: -0.5
+  },
+  bannerMeta: {
+    fontSize: 11,
+    color: theme.colors.muted
   },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.border
+    borderColor: theme.colors.border,
+    marginBottom: 14
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: theme.colors.navy,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 8
   },
   searchInput: {
     flex: 1,
@@ -210,8 +262,8 @@ const styles = StyleSheet.create({
     color: theme.colors.navy
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+    padding: 16,
+    paddingBottom: 32,
     gap: 12
   },
   invoiceCard: {

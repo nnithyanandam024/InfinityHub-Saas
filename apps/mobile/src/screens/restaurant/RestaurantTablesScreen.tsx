@@ -14,6 +14,9 @@ import {
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
 import { Badge } from '../../components/common/Badge';
+import { Button } from '../../components/common/Button';
+import { AppHeader } from '../../components/layout/AppHeader';
+import { EmptyStateCard } from '../../components/common/EmptyStateCard';
 import { useRestaurant } from '../../context/RestaurantContext';
 import { useTenant } from '../../context/TenantContext';
 import { RestaurantTable, TableStatus } from '@infinityhub/types';
@@ -197,22 +200,25 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
             <Text style={styles.cleaningActionText}>Tap to Vacate</Text>
           ) : (
             <View style={styles.activeActionsRow}>
-              <TouchableOpacity
-                style={styles.cardActionBtn}
+              <Button
+                size="sm"
+                variant="outline"
+                label="Order"
+                icon="utensils"
                 onPress={() => {
                   setSelectedTableId(item.id);
                   navigation.navigate('RestaurantOrderTab');
                 }}
-              >
-                <Text style={styles.cardActionText}>Order Pad</Text>
-              </TouchableOpacity>
+                style={{ flex: 1, marginRight: 6 }}
+              />
 
-              <TouchableOpacity
-                style={[styles.cardActionBtn, styles.cardActionSettle]}
+              <Button
+                size="sm"
+                variant="primary"
+                label="Settle"
                 onPress={() => setSettleModalTable(item)}
-              >
-                <Text style={styles.cardActionSettleText}>Settle</Text>
-              </TouchableOpacity>
+                style={{ minWidth: 64 }}
+              />
             </View>
           )}
         </View>
@@ -222,62 +228,15 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Top Header Bar */}
-      <View style={styles.headerBar}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.tenantName} numberOfLines={1}>
-            {tenant?.name || 'Restaurant Workspace'}
-          </Text>
-          <Text style={styles.occupancyText}>
-            Floor Occupancy: {occupancyStats.occupiedCount} / {occupancyStats.totalTables} Tables ({occupancyStats.occupancyRate}%)
-          </Text>
-        </View>
-      </View>
-
-      {/* Sections Horizontal Pill Bar */}
-      <View style={styles.filterScrollWrap}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-          <TouchableOpacity
-            style={[styles.filterPill, selectedSectionId === 'all' && styles.filterPillActive]}
-            onPress={() => setSelectedSectionId('all')}
-          >
-            <Text style={[styles.filterPillText, selectedSectionId === 'all' && styles.filterPillTextActive]}>
-              All Sections
-            </Text>
-          </TouchableOpacity>
-
-          {sections.map(sec => (
-            <TouchableOpacity
-              key={sec.id}
-              style={[styles.filterPill, selectedSectionId === sec.id && styles.filterPillActive]}
-              onPress={() => setSelectedSectionId(sec.id)}
-            >
-              <Text style={[styles.filterPillText, selectedSectionId === sec.id && styles.filterPillTextActive]}>
-                {sec.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Status Filter Horizontal Pills */}
-      <View style={styles.statusFilterWrap}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-          {(['all', 'vacant', 'seated', 'ordered', 'served', 'billed', 'cleaning'] as const).map(st => (
-            <TouchableOpacity
-              key={st}
-              style={[styles.statusTab, selectedStatusFilter === st && styles.statusTabActive]}
-              onPress={() => setSelectedStatusFilter(st)}
-            >
-              <Text style={[styles.statusTabText, selectedStatusFilter === st && styles.statusTabTextActive]}>
-                {st.toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+      {/* Top Application Header */}
+      <AppHeader
+        navigation={navigation}
+        title={tenant?.name || 'Restaurant Workspace'}
+        subtitleBadge={`${occupancyStats.occupiedCount} / ${occupancyStats.totalTables} Tables (${occupancyStats.occupancyRate}%)`}
+        icon="utensils"
+        hideScanner
+        onAvatarPress={() => navigation.navigate('RestaurantAccountTab')}
+      />
 
       {/* Tables Grid */}
       <FlatList
@@ -288,12 +247,93 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <Icon name="table" size={32} color={theme.colors.muted} />
-            <Text style={styles.emptyTitle}>No Tables Found</Text>
-            <Text style={styles.emptySubtitle}>No dining tables match the selected section and status filter.</Text>
+        ListHeaderComponent={
+          <View style={styles.headerSection}>
+            {/* Floor Occupancy Hero Banner */}
+            <View style={styles.bannerCard}>
+              <Text style={styles.bannerSubhead}>DINING FLOOR OCCUPANCY</Text>
+              <View style={styles.bannerMainRow}>
+                <Text style={styles.bannerTitle}>
+                  {occupancyStats.occupiedCount} / {occupancyStats.totalTables} Tables Active
+                </Text>
+                <Badge
+                  label={`${occupancyStats.occupancyRate}% OCCUPIED`}
+                  variant={occupancyStats.occupancyRate > 75 ? 'danger' : occupancyStats.occupancyRate > 40 ? 'warning' : 'success'}
+                  size="sm"
+                />
+              </View>
+
+              {/* Progress track */}
+              <View style={styles.meterTrack}>
+                <View
+                  style={[
+                    styles.meterFill,
+                    { width: `${Math.min(100, occupancyStats.occupancyRate)}%` }
+                  ]}
+                />
+              </View>
+              <Text style={styles.bannerMeta}>
+                {occupancyStats.totalTables - occupancyStats.occupiedCount} vacant tables available for walk-in guests
+              </Text>
+            </View>
+
+            {/* Sections Horizontal Pill Bar */}
+            <View style={styles.filterScrollWrap}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+                <TouchableOpacity
+                  style={[styles.filterPill, selectedSectionId === 'all' && styles.filterPillActive]}
+                  onPress={() => setSelectedSectionId('all')}
+                >
+                  <Text style={[styles.filterPillText, selectedSectionId === 'all' && styles.filterPillTextActive]}>
+                    All Sections
+                  </Text>
+                </TouchableOpacity>
+
+                {sections.map(sec => (
+                  <TouchableOpacity
+                    key={sec.id}
+                    style={[styles.filterPill, selectedSectionId === sec.id && styles.filterPillActive]}
+                    onPress={() => setSelectedSectionId(sec.id)}
+                  >
+                    <Text style={[styles.filterPillText, selectedSectionId === sec.id && styles.filterPillTextActive]}>
+                      {sec.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Status Filter Horizontal Pills */}
+            <View style={styles.statusFilterWrap}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+                {(['all', 'vacant', 'seated', 'ordered', 'served', 'billed', 'cleaning'] as const).map(st => (
+                  <TouchableOpacity
+                    key={st}
+                    style={[styles.statusTab, selectedStatusFilter === st && styles.statusTabActive]}
+                    onPress={() => setSelectedStatusFilter(st)}
+                  >
+                    <Text style={[styles.statusTabText, selectedStatusFilter === st && styles.statusTabTextActive]}>
+                      {st.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            <Text style={styles.sectionHeadingTitle}>Floor Plan Tables</Text>
           </View>
+        }
+        ListEmptyComponent={
+          <EmptyStateCard
+            icon="table"
+            title="No tables found"
+            subtitle="No dining tables match the selected section and status filter."
+            actionLabel={selectedStatusFilter !== 'all' || selectedSectionId !== 'all' ? "Reset Filters" : undefined}
+            onAction={() => {
+              setSelectedStatusFilter('all');
+              setSelectedSectionId('all');
+            }}
+          />
         }
       />
 
@@ -323,32 +363,70 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   },
-  headerBar: {
+  headerSection: {
+    marginBottom: 4
+  },
+  bannerCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: theme.radii.card,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: 12,
+    ...theme.shadows.card
+  },
+  bannerSubhead: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: theme.colors.muted,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase'
+  },
+  bannerMainRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
+    marginTop: 4,
+    marginBottom: 8
   },
-  tenantName: {
-    fontSize: 16,
+  bannerTitle: {
+    fontSize: 18,
     fontWeight: '800',
-    color: theme.colors.navy
+    color: theme.colors.navy,
+    letterSpacing: -0.3
   },
-  occupancyText: {
+  meterTrack: {
+    height: 6,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 8
+  },
+  meterFill: {
+    height: '100%',
+    backgroundColor: theme.colors.primary,
+    borderRadius: 3
+  },
+  bannerMeta: {
     fontSize: 11,
-    color: theme.colors.muted,
-    marginTop: 2,
-    fontWeight: '500'
+    color: theme.colors.muted
+  },
+  sectionHeadingTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: theme.colors.navy,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 12,
+    marginBottom: 8
   },
   filterScrollWrap: {
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    paddingVertical: 8
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    paddingVertical: 8,
+    marginBottom: 8
   },
   statusFilterWrap: {
     backgroundColor: theme.colors.background,

@@ -17,6 +17,8 @@ const Modal = (ReactNative as any).Modal;
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
 import { Button } from '../../components/common/Button';
+import { AppHeader } from '../../components/layout/AppHeader';
+import { EmptyStateCard } from '../../components/common/EmptyStateCard';
 import { useRestaurant } from '../../context/RestaurantContext';
 import { RestaurantMenuItem, RestaurantTable } from '@infinityhub/types';
 import { RestaurantSettlementModal } from '../../components/restaurant/RestaurantSettlementModal';
@@ -216,36 +218,24 @@ export const RestaurantOrderScreen: React.FC<{ navigation: any }> = ({ navigatio
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Active Table Context Banner */}
-      <View style={styles.tableContextBar}>
-        {selectedTable ? (
-          <View style={styles.contextInfo}>
-            <View style={styles.contextRow}>
-              <Text style={styles.contextTable}>Table {selectedTable.tableNumber}</Text>
-              <View style={styles.contextStatusPill}>
-                <Text style={styles.contextStatusText}>{selectedTable.status.toUpperCase()}</Text>
-              </View>
-            </View>
-            <Text style={styles.contextSub}>
-              {selectedTable.guestCount || selectedTable.capacity} Guests · Captain: {selectedTable.captainName || 'Rajesh'}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.contextInfo}>
-            <Text style={styles.contextTable}>No Table Selected</Text>
-            <Text style={styles.contextSub}>Select an occupied dining table to take order</Text>
-          </View>
-        )}
-
-        <TouchableOpacity
-          style={styles.switchTableBtn}
-          onPress={() => setIsTablePickerOpen(true)}
-        >
-          <Text style={styles.switchTableText}>Switch Table</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Top Application Header */}
+      <AppHeader
+        navigation={navigation}
+        title={selectedTable ? `Table ${selectedTable.tableNumber}` : 'Captain Order Pad'}
+        subtitleBadge={selectedTable ? `${selectedTable.guestCount || selectedTable.capacity} Guests · ${selectedTable.status.toUpperCase()}` : 'Tap to Select Table'}
+        icon="utensils"
+        onBadgePress={() => setIsTablePickerOpen(true)}
+        rightAction={
+          <TouchableOpacity
+            style={styles.switchTablePill}
+            onPress={() => setIsTablePickerOpen(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.switchTablePillText}>Tables</Text>
+          </TouchableOpacity>
+        }
+        onAvatarPress={() => navigation.navigate('RestaurantAccountTab')}
+      />
 
       {/* Search Input */}
       <View style={styles.searchBarWrap}>
@@ -289,11 +279,13 @@ export const RestaurantOrderScreen: React.FC<{ navigation: any }> = ({ navigatio
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <Icon name="utensils" size={32} color={theme.colors.muted} />
-            <Text style={styles.emptyTitle}>No Dishes Found</Text>
-            <Text style={styles.emptySubtitle}>No menu items match your search or filter.</Text>
-          </View>
+          <EmptyStateCard
+            icon="dish"
+            title="No dishes found"
+            subtitle={searchQuery ? `No menu dishes match "${searchQuery}"` : "No menu dishes available in this category."}
+            actionLabel={searchQuery ? "Clear Search" : undefined}
+            onAction={searchQuery ? () => setSearchQuery('') : undefined}
+          />
         }
       />
 
@@ -557,15 +549,16 @@ const styles = StyleSheet.create({
     color: theme.colors.muted,
     marginTop: 2
   },
-  switchTableBtn: {
+  switchTablePill: {
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: theme.radii.sm,
     backgroundColor: theme.colors.surfaceSubtle,
     borderWidth: 1,
-    borderColor: theme.colors.border
+    borderColor: theme.colors.border,
+    marginRight: 6
   },
-  switchTableText: {
+  switchTablePillText: {
     fontSize: 11,
     fontWeight: '700',
     color: theme.colors.navy

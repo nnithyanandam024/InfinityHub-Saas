@@ -25,9 +25,11 @@ import { Product } from '@infinityhub/types';
 import { MobileDiscountModal } from '../../components/pos/MobileDiscountModal';
 import { MobilePaymentModal } from '../../components/pos/MobilePaymentModal';
 import { MobileShiftModal } from '../../components/pos/MobileShiftModal';
+import { AppHeader } from '../../components/layout/AppHeader';
+import { EmptyStateCard } from '../../components/common/EmptyStateCard';
 
 export const PosTerminalScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { products, categories } = useTenant();
+  const { products, categories, tenant } = useTenant();
   const {
     cart,
     addToCart,
@@ -134,26 +136,16 @@ export const PosTerminalScreen: React.FC<{ navigation: any }> = ({ navigation })
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
       {/* Top Application Header */}
-      <View style={styles.topHeader}>
-        <View style={styles.headerTitleCol}>
-          <View style={styles.storeRow}>
-            <Text style={styles.storeName}>{taxConfig.tradeName}</Text>
-            <TouchableOpacity
-              style={styles.shiftBadge}
-              onPress={() => setIsShiftModalOpen(true)}
-            >
-              <View style={[styles.shiftDot, currentShift ? styles.shiftDotOpen : styles.shiftDotClosed]} />
-              <Text style={styles.shiftLabel}>
-                {currentShift ? `Shift #${currentShift.id.slice(-4)}` : 'Shift Closed'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.gstinText}>GSTIN: {taxConfig.gstin} | State: {taxConfig.stateCode}</Text>
-        </View>
-      </View>
+      <AppHeader
+        navigation={navigation}
+        title={taxConfig.tradeName || tenant.name}
+        subtitleBadge={currentShift ? `Shift #${currentShift.id.slice(-4)} Active` : 'Shift Closed'}
+        icon="cart"
+        onBadgePress={() => setIsShiftModalOpen(true)}
+        hideScanner={false}
+        onAvatarPress={() => navigation.navigate('PosAccountTab')}
+      />
 
       {/* Search Bar & Barcode Scanner Button */}
       <View style={styles.searchBarRow}>
@@ -217,6 +209,16 @@ export const PosTerminalScreen: React.FC<{ navigation: any }> = ({ navigation })
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={styles.gridContent}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <EmptyStateCard
+            icon="search"
+            title="No products found"
+            subtitle={searchQuery ? `No products matching "${searchQuery}"` : "No catalog products available in this category."}
+            actionLabel={searchQuery ? "Clear Search" : undefined}
+            onAction={searchQuery ? () => setSearchQuery('') : undefined}
+            style={{ marginVertical: 20 }}
+          />
+        }
       />
 
       {/* Floating Bottom Cart Bar */}
