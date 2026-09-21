@@ -7,28 +7,15 @@ import { RestaurantOrderScreen } from '../screens/restaurant/RestaurantOrderScre
 import { RestaurantKdsScreen } from '../screens/restaurant/RestaurantKdsScreen';
 import { RestaurantMenuScreen } from '../screens/restaurant/RestaurantMenuScreen';
 import { RestaurantAccountScreen } from '../screens/restaurant/RestaurantAccountScreen';
+import { FloatingTabBar } from '../components/navigation/FloatingTabBar';
 
 const RestaurantTab = createBottomTabNavigator();
 
 export const RestaurantNavigator: React.FC = () => {
   return (
     <RestaurantTab.Navigator
+      tabBar={(props: any) => <FloatingTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.muted,
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: theme.colors.border,
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 6
-        },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
-          marginTop: 2
-        },
         headerShown: false
       }}
     >

@@ -139,6 +139,15 @@ declare module 'react-native' {
     ): void;
   };
 
+  export const Keyboard: {
+    addListener(
+      eventType: string,
+      listener: (...args: any[]) => void
+    ): { remove: () => void };
+    dismiss(): void;
+    [key: string]: any;
+  };
+
   export interface StatusBarProps {
     barStyle?: 'default' | 'light-content' | 'dark-content';
     backgroundColor?: string;
@@ -238,6 +247,14 @@ declare module '@react-navigation/bottom-tabs' {
     tabBarStyle?: any;
     tabBarActiveTintColor?: string;
     tabBarInactiveTintColor?: string;
+    [key: string]: any;
+  }
+
+  export interface BottomTabBarProps {
+    state: any;
+    descriptors: any;
+    navigation: any;
+    insets: { top: number; right: number; bottom: number; left: number };
     [key: string]: any;
   }
   export function createBottomTabNavigator<ParamList extends Record<string, object | undefined> = any>(): {

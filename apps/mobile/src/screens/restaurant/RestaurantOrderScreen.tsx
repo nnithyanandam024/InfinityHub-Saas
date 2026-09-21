@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: theme.spacing.lg,
-    paddingBottom: 110
+    paddingBottom: 160
   },
   dishCard: {
     backgroundColor: '#FFFFFF',
@@ -759,15 +759,18 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: Platform.OS === 'ios' ? 92 : 86,
+    left: 14,
+    right: 14,
     backgroundColor: '#0F172A',
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: 10,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 12,
-    borderTopLeftRadius: theme.radii.card,
-    borderTopRightRadius: theme.radii.card
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6
   },
   drawerTrigger: {
     flexDirection: 'row',

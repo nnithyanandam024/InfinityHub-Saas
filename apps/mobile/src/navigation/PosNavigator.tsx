@@ -7,28 +7,15 @@ import { PosInvoicesScreen } from '../screens/pos/PosInvoicesScreen';
 import { PosShiftScreen } from '../screens/pos/PosShiftScreen';
 import { PosKhataScreen } from '../screens/pos/PosKhataScreen';
 import { PosAccountScreen } from '../screens/pos/PosAccountScreen';
+import { FloatingTabBar } from '../components/navigation/FloatingTabBar';
 
 const PosTab = createBottomTabNavigator();
 
 export const PosNavigator: React.FC = () => {
   return (
     <PosTab.Navigator
+      tabBar={(props: any) => <FloatingTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.muted,
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: theme.colors.border,
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 6
-        },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
-          marginTop: 2
-        },
         headerShown: false
       }}
     >

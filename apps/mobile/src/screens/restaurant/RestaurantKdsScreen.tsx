@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: theme.spacing.lg,
-    paddingBottom: 24
+    paddingBottom: 96
   },
   kotCard: {
     backgroundColor: '#FFFFFF',

@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
-    paddingBottom: 40
+    paddingBottom: 96
   },
   banner: {
     backgroundColor: theme.colors.card,

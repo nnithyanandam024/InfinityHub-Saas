@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
-    paddingBottom: 36
+    paddingBottom: 96
   },
   pulseCard: {
     backgroundColor: theme.colors.card,

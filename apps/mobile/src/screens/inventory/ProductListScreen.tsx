@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: theme.spacing.lg,
-    paddingBottom: 85
+    paddingBottom: 96
   },
   // List Item Styles
   listCard: {

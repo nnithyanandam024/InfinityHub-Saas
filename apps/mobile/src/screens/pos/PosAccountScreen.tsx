@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 40
+    paddingBottom: 96
   },
   profileCard: {
     flexDirection: 'row',

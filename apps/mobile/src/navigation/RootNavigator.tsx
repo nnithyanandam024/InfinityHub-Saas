@@ -21,6 +21,7 @@ import { ReportsScreen } from '../screens/reports/ReportsScreen';
 import { ProfileScreen } from '../screens/settings/ProfileScreen';
 import { PosReceiptScreen } from '../screens/pos/PosReceiptScreen';
 import { RestaurantReceiptScreen } from '../screens/restaurant/RestaurantReceiptScreen';
+import { FloatingTabBar } from '../components/navigation/FloatingTabBar';
 
 const RootStack = createNativeStackNavigator();
 const AuthStack = createNativeStackNavigator();
@@ -55,22 +56,8 @@ function HomeTabs() {
 
   return (
     <Tab.Navigator
+      tabBar={(props: any) => <FloatingTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.muted,
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: theme.colors.border,
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 6
-        },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
-          marginTop: 2
-        },
         headerShown: false
       }}
     >

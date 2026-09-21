@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: theme.spacing.md,
-    paddingBottom: 24
+    paddingBottom: 96
   },
   gridRow: {
     justifyContent: 'space-between',
