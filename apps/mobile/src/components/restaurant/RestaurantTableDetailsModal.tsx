@@ -98,7 +98,7 @@ export const RestaurantTableDetailsModal: React.FC<RestaurantTableDetailsModalPr
 
   if (!table) return null;
 
-  const getStatusBadgeVariant = (status: TableStatus) => {
+  const getStatusBadgeVariant = (status: TableStatus): 'success' | 'warning' | 'danger' | 'primary' | 'muted' | 'outline' | 'info' => {
     switch (status) {
       case 'seated':
         return 'primary';
@@ -108,6 +108,8 @@ export const RestaurantTableDetailsModal: React.FC<RestaurantTableDetailsModalPr
         return 'info';
       case 'billed':
         return 'danger';
+      case 'vacant':
+        return 'success';
       default:
         return 'muted';
     }
@@ -145,7 +147,7 @@ export const RestaurantTableDetailsModal: React.FC<RestaurantTableDetailsModalPr
                   <Text style={styles.title}>Table {table.tableNumber}</Text>
                   <Badge
                     label={table.status.toUpperCase()}
-                    variant={getStatusBadgeVariant(table.status) as any}
+                    variant={getStatusBadgeVariant(table.status)}
                     size="sm"
                   />
                 </View>

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { theme } from '../../theme';
 
-export type BadgeVariant = 'success' | 'warning' | 'danger' | 'primary' | 'muted' | 'outline';
+export type BadgeVariant = 'success' | 'warning' | 'danger' | 'primary' | 'muted' | 'outline' | 'info';
 
 interface BadgeProps {
   label: string;
@@ -29,14 +29,19 @@ export const Badge: React.FC<BadgeProps> = ({
         return { bg: theme.colors.dangerBg, text: theme.colors.dangerText, border: '#FECACA' };
       case 'primary':
         return { bg: theme.colors.primaryTint, text: theme.colors.primary, border: '#BFDBFE' };
+      case 'info':
+        return { bg: theme.colors.infoBg, text: theme.colors.infoText, border: '#BAE6FD' };
       case 'muted':
         return { bg: theme.colors.surfaceSubtle, text: theme.colors.body, border: theme.colors.border };
       case 'outline':
         return { bg: 'transparent', text: theme.colors.body, border: theme.colors.border };
+      default:
+        return { bg: theme.colors.surfaceSubtle, text: theme.colors.body, border: theme.colors.border };
     }
   };
 
-  const { bg, text, border } = getColors();
+  const colors = getColors() || { bg: theme.colors.surfaceSubtle, text: theme.colors.body, border: theme.colors.border };
+  const { bg, text, border } = colors;
 
   return (
     <View
