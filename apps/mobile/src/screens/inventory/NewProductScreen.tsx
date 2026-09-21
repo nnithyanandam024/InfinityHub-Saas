@@ -177,9 +177,14 @@ export const NewProductScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           <View style={[styles.inputGroup, { flex: 1 }]}>
             <View style={styles.labelRow}>
               <Text style={styles.label}>Barcode</Text>
-              <TouchableOpacity onPress={handleGenerateBarcode}>
-                <Text style={styles.genText}>Auto</Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity onPress={() => navigation.navigate('Scanner', { onScan: (code: string) => setBarcode(code) })}>
+                  <Text style={styles.genText}>Scan</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleGenerateBarcode}>
+                  <Text style={styles.genText}>Auto</Text>
+                </TouchableOpacity>
+              </View>
             </View>
             <TextInput
               style={styles.input}

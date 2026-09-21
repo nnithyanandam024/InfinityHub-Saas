@@ -143,7 +143,7 @@ export const PosTerminalScreen: React.FC<{ navigation: any }> = ({ navigation })
         subtitleBadge={currentShift ? `Shift #${currentShift.id.slice(-4)} Active` : 'Shift Closed'}
         icon="cart"
         onBadgePress={() => setIsShiftModalOpen(true)}
-        hideScanner={false}
+        hideScanner={true}
         onAvatarPress={() => navigation.navigate('PosAccountTab')}
       />
 

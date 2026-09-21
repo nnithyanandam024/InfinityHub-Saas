@@ -48,4 +48,5 @@ dependencies {
     implementation("com.facebook.react:hermes-android")
     implementation project(':react-native-safe-area-context')
     implementation project(':react-native-screens')
+    implementation project(':react-native-camera-kit')
 }

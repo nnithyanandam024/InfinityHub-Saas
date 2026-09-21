@@ -148,6 +148,21 @@ declare module 'react-native' {
     [key: string]: any;
   };
 
+  export const PermissionsAndroid: {
+    PERMISSIONS: {
+      CAMERA: string;
+      [key: string]: string;
+    };
+    RESULTS: {
+      GRANTED: string;
+      DENIED: string;
+      NEVER_ASK_AGAIN: string;
+    };
+    check(permission: string): Promise<boolean>;
+    request(permission: string, rationale?: any): Promise<string>;
+    [key: string]: any;
+  };
+
   export interface StatusBarProps {
     barStyle?: 'default' | 'light-content' | 'dark-content';
     backgroundColor?: string;
@@ -271,4 +286,53 @@ declare module 'react-native-safe-area-context' {
   }
   export const SafeAreaProvider: React.FC<SafeAreaProviderProps>;
   export function useSafeAreaInsets(): { top: number; right: number; bottom: number; left: number };
+}
+
+declare module 'react-native-camera-kit' {
+  import React from 'react';
+  import { ViewProps } from 'react-native';
+
+  export enum CameraType {
+    Back = 'back',
+    Front = 'front'
+  }
+
+  export enum TorchMode {
+    Off = 'off',
+    On = 'on'
+  }
+
+  export interface CameraProps extends ViewProps {
+    cameraType?: CameraType | 'back' | 'front';
+    flashMode?: 'auto' | 'on' | 'off';
+    torchMode?: TorchMode | 'on' | 'off';
+    focusMode?: 'on' | 'off';
+    zoomMode?: 'on' | 'off';
+    scanBarcode?: boolean;
+    showFrame?: boolean;
+    laserColor?: string;
+    frameColor?: string;
+    onReadCode?: (event: { nativeEvent: { codeStringValue: string; [key: string]: any } }) => void;
+    onOrientationChange?: (event: any) => void;
+    onError?: (error: any) => void;
+    [key: string]: any;
+  }
+
+  export class Camera extends React.Component<CameraProps> {
+    static checkDeviceCameraAuthorizationStatus(): Promise<boolean>;
+    static requestDeviceCameraAuthorization(): Promise<boolean>;
+    capture(options?: any): Promise<any>;
+  }
+
+  export interface CameraScreenProps extends ViewProps {
+    cameraType?: CameraType | 'back' | 'front';
+    scanBarcode?: boolean;
+    showFrame?: boolean;
+    laserColor?: string;
+    frameColor?: string;
+    onReadCode?: (event: { nativeEvent: { codeStringValue: string; [key: string]: any } }) => void;
+    [key: string]: any;
+  }
+
+  export class CameraScreen extends React.Component<CameraScreenProps> {}
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,12 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
-  StatusBar
+  StatusBar,
+  Platform,
+  PermissionsAndroid,
+  Animated
 } from 'react-native';
+import { Camera, CameraType, TorchMode } from 'react-native-camera-kit';
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
 import { Badge } from '../../components/common/Badge';
@@ -22,14 +26,111 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
   const { products, formatPrice } = useTenant();
   const onScan = route?.params?.onScan;
 
-  const [barcodeInput, setBarcodeInput] = useState('');
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
+  const [isScanning, setIsScanning] = useState<boolean>(true);
+  const [barcodeInput, setBarcodeInput] = useState<string>('');
   const [matchedProduct, setMatchedProduct] = useState<Product | null>(products[0] || null);
+  const [statusMessage, setStatusMessage] = useState<string>('Align barcode inside camera frame');
 
-  const handleSearch = (code: string) => {
+  const lastScannedTime = useRef<number>(0);
+  const laserAnim = useRef(new Animated.Value(0)).current;
+
+  // Request runtime camera permission
+  const requestCameraPermission = useCallback(async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: 'Camera Permission Required',
+            message: 'Camera access is required for real-time barcode scanning.',
+            buttonPositive: 'Allow',
+            buttonNegative: 'Cancel'
+          }
+        );
+        setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
+      } catch {
+        setHasPermission(false);
+      }
+    } else {
+      try {
+        const isAuthorized = await Camera.checkDeviceCameraAuthorizationStatus();
+        if (!isAuthorized) {
+          const auth = await Camera.requestDeviceCameraAuthorization();
+          setHasPermission(auth);
+        } else {
+          setHasPermission(true);
+        }
+      } catch {
+        setHasPermission(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    requestCameraPermission();
+  }, [requestCameraPermission]);
+
+  // Animated laser scan line
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(laserAnim, {
+          toValue: 1,
+          duration: 1800,
+          useNativeDriver: true
+        }),
+        Animated.timing(laserAnim, {
+          toValue: 0,
+          duration: 1800,
+          useNativeDriver: true
+        })
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [laserAnim]);
+
+  // Handle scanned barcode from live camera or manual lookup
+  const handleCodeDetected = useCallback((rawCode: string) => {
+    const now = Date.now();
+    if (now - lastScannedTime.current < 1500) {
+      return; // 1.5s cooldown
+    }
+    lastScannedTime.current = now;
+
+    const clean = rawCode.trim();
+    if (!clean) return;
+
+    setBarcodeInput(clean);
+    const found = products.find(
+      p =>
+        (p.barcode && p.barcode.toLowerCase() === clean.toLowerCase()) ||
+        p.sku.toLowerCase() === clean.toLowerCase() ||
+        p.name.toLowerCase().includes(clean.toLowerCase())
+    );
+
+    if (found) {
+      setMatchedProduct(found);
+      setStatusMessage(`Found: ${found.name}`);
+
+      if (onScan) {
+        onScan(found.barcode || found.sku);
+        navigation.goBack();
+      }
+    } else {
+      setMatchedProduct(null);
+      setStatusMessage(`No match found for: ${clean}`);
+    }
+  }, [products, onScan, navigation]);
+
+  const handleManualSearch = (code: string) => {
     setBarcodeInput(code);
     const clean = code.trim().toLowerCase();
     if (!clean) {
       setMatchedProduct(null);
+      setStatusMessage('Align barcode inside camera frame');
       return;
     }
     const found = products.find(
@@ -39,11 +140,23 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
         p.name.toLowerCase().includes(clean)
     );
     setMatchedProduct(found || null);
+    if (found) {
+      setStatusMessage(`Matched: ${found.name}`);
+    } else {
+      setStatusMessage(`No match for "${code}"`);
+    }
   };
+
+  const laserTranslateY = laserAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [10, 190]
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+      {/* Navigation Top Header */}
       {navigation?.canGoBack?.() ? (
         <View style={styles.navHeader}>
           <TouchableOpacity
@@ -59,38 +172,117 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
             />
             <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
-          <Text style={styles.navHeaderTitle}>Barcode Scanner</Text>
+
+          <Text style={styles.navHeaderTitle}>Live Barcode Scanner</Text>
           <View style={{ width: 48 }} />
         </View>
       ) : (
-        <AppHeader navigation={navigation} />
+        <AppHeader navigation={navigation} title="Live Barcode Scanner" icon="barcode" hideScanner={true} />
       )}
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Scanner Viewfinder Simulation Box */}
-        <View style={styles.viewfinderCard}>
-          <View style={styles.viewfinderBox}>
-            <View style={[styles.corner, styles.topLeft]} />
-            <View style={[styles.corner, styles.topRight]} />
-            <View style={[styles.corner, styles.bottomLeft]} />
-            <View style={[styles.corner, styles.bottomRight]} />
+        {/* Real-Time Live Camera Viewfinder Card */}
+        <View style={styles.cameraCard}>
+          {hasPermission ? (
+            <View style={styles.cameraFrame}>
+              <Camera
+                style={styles.cameraView}
+                cameraType={CameraType.Back}
+                scanBarcode={isScanning}
+                torchMode={isTorchOn ? TorchMode.On : TorchMode.Off}
+                showFrame={false}
+                onReadCode={(event: any) => {
+                  const code = event?.nativeEvent?.codeStringValue;
+                  if (code) {
+                    handleCodeDetected(code);
+                  }
+                }}
+              />
 
-            <View style={styles.scanLine} />
-            <Icon name="barcode" size={48} color={theme.colors.primary} />
-            <Text style={styles.viewfinderText}>Align Barcode Within Frame</Text>
+              {/* Viewfinder Target Overlays */}
+              <View style={styles.targetOverlay}>
+                <View style={[styles.corner, styles.topLeft]} />
+                <View style={[styles.corner, styles.topRight]} />
+                <View style={[styles.corner, styles.bottomLeft]} />
+                <View style={[styles.corner, styles.bottomRight]} />
+
+                {/* Animated Scanning Laser Line */}
+                <Animated.View
+                  style={[
+                    styles.laserLine,
+                    {
+                      transform: [{ translateY: laserTranslateY }]
+                    }
+                  ]}
+                />
+              </View>
+
+              {/* Viewfinder Top Control Bar */}
+              <View style={styles.cameraControlsRow}>
+                <TouchableOpacity
+                  style={[styles.controlPill, isTorchOn && styles.controlPillActive]}
+                  onPress={() => setIsTorchOn(!isTorchOn)}
+                  activeOpacity={0.8}
+                >
+                  <Icon name="tag" size={14} color={isTorchOn ? '#FFFFFF' : theme.colors.navy} />
+                  <Text style={[styles.controlText, isTorchOn && styles.controlTextActive]}>
+                    {isTorchOn ? 'Torch On' : 'Torch Off'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.controlPill, !isScanning && styles.controlPillActive]}
+                  onPress={() => setIsScanning(!isScanning)}
+                  activeOpacity={0.8}
+                >
+                  <Icon name="close" size={14} color={!isScanning ? '#FFFFFF' : theme.colors.navy} />
+                  <Text style={[styles.controlText, !isScanning && styles.controlTextActive]}>
+                    {isScanning ? 'Live' : 'Paused'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : hasPermission === false ? (
+            <View style={styles.fallbackBox}>
+              <Icon name="alert" size={36} color={theme.colors.warning} />
+              <Text style={styles.fallbackTitle}>Camera Permission Required</Text>
+              <Text style={styles.fallbackSub}>
+                Enable camera access to scan barcodes and QR codes live.
+              </Text>
+              <Button
+                label="Grant Camera Access"
+                onPress={requestCameraPermission}
+                variant="primary"
+                size="sm"
+                style={{ marginTop: 10 }}
+              />
+            </View>
+          ) : (
+            <View style={styles.fallbackBox}>
+              <Icon name="barcode" size={36} color={theme.colors.muted} />
+              <Text style={styles.fallbackTitle}>Initializing Camera...</Text>
+            </View>
+          )}
+
+          {/* Status Subtitle Strip */}
+          <View style={styles.statusStrip}>
+            <View style={styles.statusDot} />
+            <Text style={styles.statusText} numberOfLines={1}>
+              {statusMessage}
+            </Text>
           </View>
         </View>
 
         {/* Manual Barcode / SKU Input */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Barcode / SKU Lookup</Text>
+          <Text style={styles.label}>Manual Barcode / SKU Lookup</Text>
           <View style={styles.searchRow}>
             <TextInput
               style={styles.input}
               placeholder="Enter barcode or SKU number..."
               placeholderTextColor={theme.colors.muted}
               value={barcodeInput}
-              onChangeText={handleSearch}
+              onChangeText={handleManualSearch}
               keyboardType="default"
               autoCapitalize="none"
             />
@@ -99,6 +291,7 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
                 onPress={() => {
                   setBarcodeInput('');
                   setMatchedProduct(null);
+                  setStatusMessage('Align barcode inside camera frame');
                 }}
                 style={styles.clearBtn}
               >
@@ -108,14 +301,14 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
           </View>
         </View>
 
-        {/* Quick Test Barcode Pills */}
-        <Text style={styles.label}>Quick Test Scan Simulation</Text>
+        {/* Quick Test Barcode Simulation Chips */}
+        <Text style={styles.label}>Quick Test Simulation</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickBarcodes}>
-          {products.slice(0, 4).map(p => (
+          {products.slice(0, 5).map(p => (
             <TouchableOpacity
               key={p.id}
               style={[styles.quickChip, matchedProduct?.id === p.id && styles.quickChipActive]}
-              onPress={() => handleSearch(p.barcode || p.sku)}
+              onPress={() => handleCodeDetected(p.barcode || p.sku)}
             >
               <Text style={[styles.quickChipText, matchedProduct?.id === p.id && styles.quickChipTextActive]}>
                 {p.name.slice(0, 16)}...
@@ -199,7 +392,7 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
         ) : (
           <View style={styles.noMatchCard}>
             <Text style={styles.noMatchText}>No product found matching code</Text>
-            <Text style={styles.noMatchSub}>Check barcode number or tap a simulation chip above.</Text>
+            <Text style={styles.noMatchSub}>Scan a product barcode or tap a quick chip above.</Text>
           </View>
         )}
       </ScrollView>
@@ -239,50 +432,123 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
-    paddingBottom: 40
+    paddingBottom: 130
   },
-  viewfinderCard: {
+  cameraCard: {
     backgroundColor: theme.colors.card,
     borderRadius: theme.radii.lg,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    padding: 20,
-    alignItems: 'center',
+    overflow: 'hidden',
     marginBottom: theme.spacing.md,
     ...theme.shadows.card
   },
-  viewfinderBox: {
+  cameraFrame: {
     width: '100%',
-    height: 160,
-    backgroundColor: theme.colors.surfaceSubtle,
-    borderRadius: theme.radii.md,
+    height: 220,
+    backgroundColor: '#0F172A',
+    position: 'relative',
+    overflow: 'hidden'
+  },
+  cameraView: {
+    ...StyleSheet.absoluteFillObject
+  },
+  targetOverlay: {
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative'
+    justifyContent: 'center'
   },
   corner: {
     position: 'absolute',
-    width: 18,
-    height: 18,
+    width: 22,
+    height: 22,
     borderColor: theme.colors.primary,
     borderWidth: 3
   },
-  topLeft: { top: 10, left: 10, borderRightWidth: 0, borderBottomWidth: 0 },
-  topRight: { top: 10, right: 10, borderLeftWidth: 0, borderBottomWidth: 0 },
-  bottomLeft: { bottom: 10, left: 10, borderRightWidth: 0, borderTopWidth: 0 },
-  bottomRight: { bottom: 10, right: 10, borderLeftWidth: 0, borderTopWidth: 0 },
-  scanLine: {
+  topLeft: { top: 16, left: 16, borderRightWidth: 0, borderBottomWidth: 0 },
+  topRight: { top: 16, right: 16, borderLeftWidth: 0, borderBottomWidth: 0 },
+  bottomLeft: { bottom: 16, left: 16, borderRightWidth: 0, borderTopWidth: 0 },
+  bottomRight: { bottom: 16, right: 16, borderLeftWidth: 0, borderTopWidth: 0 },
+  laserLine: {
     position: 'absolute',
-    width: '80%',
+    left: 20,
+    right: 20,
     height: 2,
-    backgroundColor: theme.colors.danger,
-    opacity: 0.8
+    backgroundColor: '#EF4444',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 6,
+    elevation: 4
   },
-  viewfinderText: {
+  cameraControlsRow: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row',
+    gap: 8
+  },
+  controlPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: theme.radii.full
+  },
+  controlPillActive: {
+    backgroundColor: theme.colors.primary
+  },
+  controlText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.colors.navy
+  },
+  controlTextActive: {
+    color: '#FFFFFF'
+  },
+  fallbackBox: {
+    width: '100%',
+    height: 200,
+    backgroundColor: theme.colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20
+  },
+  fallbackTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.navy,
+    marginTop: 8
+  },
+  fallbackSub: {
     fontSize: 12,
+    color: theme.colors.muted,
+    textAlign: 'center',
+    marginTop: 4
+  },
+  statusStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: '#F8FAFC',
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.primary,
+    marginRight: 8
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
     color: theme.colors.body,
-    marginTop: 10,
-    fontWeight: '600'
+    flex: 1
   },
   inputGroup: {
     marginBottom: theme.spacing.md
@@ -349,25 +615,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.surfaceSubtle,
+    borderBottomColor: theme.colors.border,
     marginBottom: 10
   },
   resultBadgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: theme.colors.primary,
-    letterSpacing: 0.5
+    letterSpacing: 0.8,
+    color: theme.colors.primary
   },
   resultBody: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    marginBottom: 14
   },
   resultThumbWrap: {
-    width: 54,
-    height: 54,
+    width: 60,
+    height: 60,
     borderRadius: theme.radii.sm,
-    overflow: 'hidden',
-    backgroundColor: theme.colors.surfaceSubtle
+    backgroundColor: theme.colors.surfaceSubtle,
+    overflow: 'hidden'
   },
   resultThumb: {
     width: '100%',
@@ -377,59 +644,57 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primaryTint
   },
   resultFallbackText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: theme.colors.muted
+    fontWeight: '800',
+    color: theme.colors.primary
   },
   resultName: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.navy
+    color: theme.colors.navy,
+    marginBottom: 2
   },
   resultMeta: {
     fontSize: 11,
-    color: theme.colors.body,
-    marginTop: 1
+    color: theme.colors.muted,
+    marginBottom: 4
   },
   resultPrice: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: theme.colors.navy,
-    marginTop: 2
+    fontSize: 15,
+    fontWeight: '800',
+    color: theme.colors.primary
   },
   resultStock: {
     fontSize: 11,
     fontWeight: '600',
-    color: theme.colors.primary,
-    marginTop: 1
+    color: theme.colors.body,
+    marginTop: 2
   },
   resultActions: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 12,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.surfaceSubtle
+    gap: 8,
+    marginTop: 4
   },
   noMatchCard: {
-    padding: 24,
-    backgroundColor: theme.colors.card,
+    padding: 20,
     borderRadius: theme.radii.md,
+    backgroundColor: theme.colors.surfaceSubtle,
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    alignItems: 'center'
+    borderColor: theme.colors.border
   },
   noMatchText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     color: theme.colors.navy
   },
   noMatchSub: {
     fontSize: 11,
     color: theme.colors.muted,
-    marginTop: 3
+    marginTop: 4
   }
 });

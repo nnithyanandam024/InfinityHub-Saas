@@ -20,3 +20,6 @@ project(':react-native-safe-area-context').projectDir = resolveNodeModule('react
 
 include ':react-native-screens'
 project(':react-native-screens').projectDir = resolveNodeModule('react-native-screens')
+
+include ':react-native-camera-kit'
+project(':react-native-camera-kit').projectDir = resolveNodeModule('react-native-camera-kit')
