@@ -18,10 +18,60 @@ export interface DemoPersona {
   roleLabel: string;
   tenantId: string;
   tenantName: string;
+  appId: 'inventory' | 'pos' | 'restaurant';
+  appLabel: string;
+  icon: 'package' | 'cart' | 'utensils';
+  accentColor: string;
   description: string;
+  features: string[];
 }
 
 export const DEMO_PERSONAS: DemoPersona[] = [
+  {
+    key: 'abc-supermarket-owner',
+    name: 'Rajesh Sharma',
+    email: 'rajesh@abcsupermarket.in',
+    role: 'TENANT_OWNER',
+    roleLabel: 'Store Owner',
+    tenantId: 'tenant-abc-supermarket',
+    tenantName: 'ABC Supermarket',
+    appId: 'inventory',
+    appLabel: 'Inventory Management',
+    icon: 'package',
+    accentColor: '#2563EB',
+    description: 'FMCG & grocery stock, purchase orders, and supplier catalogs',
+    features: ['Multi-unit inventory', 'Purchase receipts', 'Barcode lookup', 'Stocktake audits']
+  },
+  {
+    key: 'city-retail-owner',
+    name: 'Arvind Singhal',
+    email: 'arvind@cityretailtools.com',
+    role: 'TENANT_OWNER',
+    roleLabel: 'Store Owner',
+    tenantId: 'tenant-city-retail',
+    tenantName: 'City Retail Hardware',
+    appId: 'pos',
+    appLabel: 'Billing & POS',
+    icon: 'cart',
+    accentColor: '#4F46E5',
+    description: 'High-speed barcode checkout, cash drawer shifts, and tax invoices',
+    features: ['Rapid barcode POS', 'Cash / UPI / Card / Khata', 'Daily register shifts', 'Sales returns']
+  },
+  {
+    key: 'xyz-restaurant-owner',
+    name: 'Chef Rahul Kapoor',
+    email: 'rahul@xyzbistro.com',
+    role: 'TENANT_OWNER',
+    roleLabel: 'Executive Chef & Owner',
+    tenantId: 'tenant-xyz-restaurant',
+    tenantName: 'XYZ Gourmet Bistro',
+    appId: 'restaurant',
+    appLabel: 'Restaurant Ops',
+    icon: 'utensils',
+    accentColor: '#EA580C',
+    description: 'Floor tables, handheld Captain Pad, Kitchen Display System, and 86 menu control',
+    features: ['Floor sections & tables', 'Captain Order Pad (KOT)', 'Kitchen bump bar (KDS)', 'Manager PIN voids']
+  },
   {
     key: 'kumar-owner',
     name: 'Kumar Store Owner',
@@ -30,57 +80,42 @@ export const DEMO_PERSONAS: DemoPersona[] = [
     roleLabel: 'Store Owner',
     tenantId: 'tenant-kumar-stores',
     tenantName: 'Kumar Stores',
-    description: 'Full store management, catalog CRUD, and margins'
+    appId: 'inventory',
+    appLabel: 'Inventory Management',
+    icon: 'package',
+    accentColor: '#2563EB',
+    description: 'General retail store management, catalog CRUD, and margins',
+    features: ['Stock adjustment', 'Valuation reports', 'Product pricing']
   },
   {
-    key: 'kumar-manager',
-    name: 'Suresh Manager',
-    email: 'manager@kumarstores.in',
-    role: 'MANAGER',
-    roleLabel: 'Store Manager',
-    tenantId: 'tenant-kumar-stores',
-    tenantName: 'Kumar Stores',
-    description: 'Catalog and stock adjustments, margins visible'
-  },
-  {
-    key: 'kumar-staff',
-    name: 'Staff Clerk',
-    email: 'staff@kumarstores.in',
+    key: 'city-retail-cashier',
+    name: 'Dinesh Kumar',
+    email: 'cashier@cityretailtools.com',
     role: 'STAFF',
-    roleLabel: 'Store Staff',
-    tenantId: 'tenant-kumar-stores',
-    tenantName: 'Kumar Stores',
-    description: 'Catalog lookup and counts, cost hidden'
-  },
-  {
-    key: 'abc-owner',
-    name: 'Rajesh Sharma',
-    email: 'rajesh@abcsupermarket.in',
-    role: 'TENANT_OWNER',
-    roleLabel: 'Store Owner',
-    tenantId: 'tenant-abc-supermarket',
-    tenantName: 'ABC Supermarket',
-    description: 'FMCG and grocery catalog management'
-  },
-  {
-    key: 'abc-manager',
-    name: 'Kavitha Ramasamy',
-    email: 'kavitha.mgr@abcsupermarket.in',
-    role: 'MANAGER',
-    roleLabel: 'Store Manager',
-    tenantId: 'tenant-abc-supermarket',
-    tenantName: 'ABC Supermarket',
-    description: 'Supermarket inventory, purchases, and reorders'
-  },
-  {
-    key: 'city-retail-owner',
-    name: 'K. Venkatesh',
-    email: 'city@retail.com',
-    role: 'TENANT_OWNER',
-    roleLabel: 'Store Owner',
+    roleLabel: 'Store Cashier',
     tenantId: 'tenant-city-retail',
     tenantName: 'City Retail Hardware',
-    description: 'Hardware, electrical, and tools retail'
+    appId: 'pos',
+    appLabel: 'Billing & POS',
+    icon: 'cart',
+    accentColor: '#4F46E5',
+    description: 'Checkout desk, register shifts, and customer receipts',
+    features: ['Fast checkout', 'Shift closing']
+  },
+  {
+    key: 'xyz-restaurant-captain',
+    name: 'Captain Suresh',
+    email: 'suresh.captain@xyzbistro.com',
+    role: 'STAFF',
+    roleLabel: 'Floor Captain',
+    tenantId: 'tenant-xyz-restaurant',
+    tenantName: 'XYZ Gourmet Bistro',
+    appId: 'restaurant',
+    appLabel: 'Restaurant Ops',
+    icon: 'utensils',
+    accentColor: '#EA580C',
+    description: 'Table seating, taking guest orders, and firing KOTs',
+    features: ['Quick seat', 'KOT dispatching']
   }
 ];
 
@@ -96,20 +131,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Default to Kumar Stores Owner for direct operational view
-  const defaultPersona = DEMO_PERSONAS[0];
-  const [user, setUser] = useState<AuthUser | null>({
-    id: defaultPersona.key,
-    name: defaultPersona.name,
-    email: defaultPersona.email,
-    role: defaultPersona.role,
-    tenantId: defaultPersona.tenantId,
-    tenantName: defaultPersona.tenantName
-  });
+  // Start with unauthenticated user so login screen and 1-tap sample store accounts are displayed
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   const login = (email: string, _pass: string): boolean => {
     const emailNorm = email.trim().toLowerCase();
-    const persona = DEMO_PERSONAS.find(p => p.email.toLowerCase() === emailNorm || (emailNorm === 'owner@abcsupermarket.com' && p.key === 'abc-owner'));
+    const persona = DEMO_PERSONAS.find(p => {
+      const pEmail = p.email.toLowerCase();
+      if (pEmail === emailNorm) return true;
+      if (emailNorm === 'owner@abcsupermarket.com' && p.key === 'abc-supermarket-owner') return true;
+      if (emailNorm === 'city@retail.com' && p.key === 'city-retail-owner') return true;
+      if (emailNorm === 'contact@xyzbistro.com' && p.key === 'xyz-restaurant-owner') return true;
+      return false;
+    });
+
     if (persona) {
       setUser({
         id: persona.key,
@@ -118,6 +153,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role: persona.role,
         tenantId: persona.tenantId,
         tenantName: persona.tenantName
+      });
+      return true;
+    }
+
+    if (emailNorm.includes('restaurant') || emailNorm.includes('bistro')) {
+      setUser({
+        id: 'usr-custom-restaurant',
+        name: 'Restaurant Operator',
+        email,
+        role: 'TENANT_OWNER',
+        tenantId: 'tenant-xyz-restaurant',
+        tenantName: 'XYZ Gourmet Bistro'
+      });
+      return true;
+    }
+
+    if (emailNorm.includes('pos') || emailNorm.includes('retail')) {
+      setUser({
+        id: 'usr-custom-pos',
+        name: 'POS Operator',
+        email,
+        role: 'TENANT_OWNER',
+        tenantId: 'tenant-city-retail',
+        tenantName: 'City Retail Hardware'
       });
       return true;
     }

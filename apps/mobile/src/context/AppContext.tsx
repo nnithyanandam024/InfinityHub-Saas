@@ -74,10 +74,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   ));
 
   useEffect(() => {
-    if (tenant?.applicationId === 'restaurant' && activeAppId !== 'restaurant') {
+    if (tenant?.applicationId === 'restaurant') {
       setActiveAppId('restaurant');
-    } else if (tenant?.applicationId === 'pos' && activeAppId === 'inventory') {
+    } else if (tenant?.applicationId === 'pos') {
       setActiveAppId('pos');
+    } else if (tenant?.applicationId === 'inventory') {
+      setActiveAppId('inventory');
     }
   }, [tenant?.applicationId]);
 
