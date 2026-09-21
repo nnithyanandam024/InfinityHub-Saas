@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   ScrollView,
   Image,
   Alert,
-  StatusBar
+  StatusBar,
+  DeviceEventEmitter
 } from 'react-native';
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
@@ -52,6 +53,13 @@ export const NewProductScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   const [minimumStock, setMinimumStock] = useState('5');
   const [unit, setUnit] = useState('pcs');
   const [selectedPhoto, setSelectedPhoto] = useState(PHOTO_PRESETS[0].url);
+
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('onBarcodeScanned', (code: string) => {
+      setBarcode(code);
+    });
+    return () => sub.remove();
+  }, []);
 
   const handleGenerateSku = () => {
     setSku(`SKU-${Math.floor(1000 + Math.random() * 9000)}`);
@@ -178,7 +186,7 @@ export const NewProductScreen: React.FC<{ navigation: any }> = ({ navigation }) 
             <View style={styles.labelRow}>
               <Text style={styles.label}>Barcode</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TouchableOpacity onPress={() => navigation.navigate('Scanner', { onScan: (code: string) => setBarcode(code) })}>
+                <TouchableOpacity onPress={() => navigation.navigate('Scanner', { target: 'new_product' })}>
                   <Text style={styles.genText}>Scan</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleGenerateBarcode}>

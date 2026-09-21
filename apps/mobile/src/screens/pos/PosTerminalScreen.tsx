@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
-  Alert
+  Alert,
+  DeviceEventEmitter
 } from 'react-native';
 import * as ReactNative from 'react-native';
 const Modal = (ReactNative as any).Modal;
@@ -68,20 +69,24 @@ export const PosTerminalScreen: React.FC<{ navigation: any }> = ({ navigation })
     });
   }, [products, selectedCategory, searchQuery]);
 
-  const handleBarcodePress = () => {
-    navigation.navigate('Scanner', {
-      onScan: (scannedCode: string) => {
-        const found = products.find(
-          p => p.barcode === scannedCode || p.sku.toLowerCase() === scannedCode.toLowerCase()
-        );
-        if (found) {
-          addToCart(found);
-          Alert.alert('Item Added', `${found.name} added to cart.`);
-        } else {
-          Alert.alert('Barcode Not Found', `No product matches barcode: ${scannedCode}`);
-        }
+  // Listen for barcode scans from BarcodeScannerScreen
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('onBarcodeScanned', (scannedCode: string) => {
+      const found = products.find(
+        p => p.barcode === scannedCode || p.sku.toLowerCase() === scannedCode.toLowerCase()
+      );
+      if (found) {
+        addToCart(found);
+        Alert.alert('Item Added', `${found.name} added to cart.`);
+      } else {
+        Alert.alert('Barcode Not Found', `No product matches barcode: ${scannedCode}`);
       }
     });
+    return () => sub.remove();
+  }, [products, addToCart]);
+
+  const handleBarcodePress = () => {
+    navigation.navigate('Scanner', { target: 'pos' });
   };
 
   const handleCheckoutComplete = async (paymentData: any) => {

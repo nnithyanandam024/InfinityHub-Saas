@@ -163,6 +163,20 @@ declare module 'react-native' {
     [key: string]: any;
   };
 
+  export const DeviceEventEmitter: {
+    addListener(
+      eventType: string,
+      listener: (...args: any[]) => void
+    ): { remove: () => void };
+    emit(eventType: string, ...params: any[]): void;
+    removeAllListeners(eventType?: string): void;
+    [key: string]: any;
+  };
+
+  export const NativeModules: {
+    [key: string]: any;
+  };
+
   export interface StatusBarProps {
     barStyle?: 'default' | 'light-content' | 'dark-content';
     backgroundColor?: string;

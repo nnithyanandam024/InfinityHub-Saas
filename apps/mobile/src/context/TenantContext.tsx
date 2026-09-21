@@ -38,7 +38,7 @@ const TenantContext = createContext<TenantContextType | undefined>(undefined);
 export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   // Strictly bind active tenant to the authenticated user
-  const activeTenantId = user?.tenantId || 'tenant-kumar-stores';
+  const activeTenantId = user?.tenantId || 'tenant-abc-supermarket';
   const [tenantsState, setTenantsState] = useState<Record<string, TenantData>>(INITIAL_TENANTS_MAP);
 
   // Sync with Backend API Server
@@ -83,7 +83,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [activeTenantId, fetchStoreData]);
 
   const tenantData = useMemo(() => {
-    return tenantsState[activeTenantId] || tenantsState['tenant-kumar-stores'] || Object.values(tenantsState)[0];
+    return tenantsState[activeTenantId] || tenantsState['tenant-abc-supermarket'] || Object.values(tenantsState)[0];
   }, [tenantsState, activeTenantId]);
 
   const currencySymbol = tenantData.tenant.settings?.currencySymbol || '₹';
