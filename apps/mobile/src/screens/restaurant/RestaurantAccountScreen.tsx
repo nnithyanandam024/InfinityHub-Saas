@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+
 import {
   View,
   Text,
@@ -15,7 +16,6 @@ import { Button } from '../../components/common/Button';
 import { useRestaurant } from '../../context/RestaurantContext';
 import { useTenant } from '../../context/TenantContext';
 import { useAuth } from '../../context/AuthContext';
-import { AppLauncherModal } from '../../components/modals/AppLauncherModal';
 
 export const RestaurantAccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { tenant } = useTenant();
@@ -27,8 +27,6 @@ export const RestaurantAccountScreen: React.FC<{ navigation: any }> = ({ navigat
     wasteLogs,
     tableAudits
   } = useRestaurant();
-
-  const [isAppLauncherOpen, setIsAppLauncherOpen] = useState<boolean>(false);
 
   const settledOrders = orders.filter(o => o.orderStatus === 'settled');
   const todaySales = settledOrders.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
@@ -62,14 +60,6 @@ export const RestaurantAccountScreen: React.FC<{ navigation: any }> = ({ navigat
           <Text style={styles.storeName}>{tenant?.name || 'Gourmet Bistro'}</Text>
           <Text style={styles.userRole}>Staff User: {user?.name || 'Rajesh'} ({user?.role || 'CAPTAIN'})</Text>
         </View>
-
-        <TouchableOpacity
-          style={styles.switchBtn}
-          onPress={() => setIsAppLauncherOpen(true)}
-        >
-          <Icon name="appLauncher" size={16} color={theme.colors.navy} />
-          <Text style={styles.switchBtnText}>Suites</Text>
-        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -142,17 +132,6 @@ export const RestaurantAccountScreen: React.FC<{ navigation: any }> = ({ navigat
         {/* Actions */}
         <View style={styles.actionSection}>
           <TouchableOpacity
-            style={styles.actionRowBtn}
-            onPress={() => setIsAppLauncherOpen(true)}
-          >
-            <View style={styles.actionRowLeft}>
-              <Icon name="appLauncher" size={18} color={theme.colors.navy} />
-              <Text style={styles.actionRowText}>Switch Business Suite</Text>
-            </View>
-            <Icon name="chevronRight" size={16} color={theme.colors.muted} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
             style={[styles.actionRowBtn, styles.logoutBtn]}
             onPress={handleLogout}
           >
@@ -163,12 +142,6 @@ export const RestaurantAccountScreen: React.FC<{ navigation: any }> = ({ navigat
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* App Launcher Modal */}
-      <AppLauncherModal
-        visible={isAppLauncherOpen}
-        onClose={() => setIsAppLauncherOpen(false)}
-      />
     </SafeAreaView>
   );
 };
@@ -204,22 +177,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: theme.colors.muted,
     marginTop: 2
-  },
-  switchBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: theme.radii.sm,
-    backgroundColor: theme.colors.surfaceSubtle,
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  switchBtnText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: theme.colors.navy
   },
   scrollContent: {
     padding: theme.spacing.lg,

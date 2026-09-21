@@ -1,35 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
   SafeAreaView,
   StatusBar,
   Alert
 } from 'react-native';
 import { theme } from '../../theme';
-import { Icon } from '../../components/common/Icon';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { useTenant } from '../../context/TenantContext';
 import { usePos } from '../../context/PosContext';
-import { useApp } from '../../context/AppContext';
-import { AppLauncherModal } from '../../components/modals/AppLauncherModal';
 
 export const PosAccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user, logout } = useAuth();
   const { tenant } = useTenant();
   const { taxConfig, currentShift } = usePos();
-  const { switchApp } = useApp();
-
-  const [isAppLauncherOpen, setIsAppLauncherOpen] = useState<boolean>(false);
-
-  const handleSwitchToInventory = () => {
-    switchApp('inventory');
-  };
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out of your cashier terminal?', [
@@ -45,7 +34,7 @@ export const PosAccountScreen: React.FC<{ navigation: any }> = ({ navigation }) 
       {/* Screen Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Store & Terminal Account</Text>
-        <Text style={styles.headerSubtitle}>GST registration, terminal settings & suites</Text>
+        <Text style={styles.headerSubtitle}>GST registration & terminal settings</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -64,44 +53,6 @@ export const PosAccountScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                 size="sm"
               />
             </View>
-          </View>
-        </View>
-
-        {/* Business Suite Switcher Card */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Application Suite</Text>
-          <Text style={styles.sectionDesc}>
-            Currently operating in <Text style={{ fontWeight: '800', color: theme.colors.primary }}>Retail Billing & POS</Text>.
-          </Text>
-
-          <View style={styles.switchButtonRow}>
-            <TouchableOpacity
-              style={styles.switchSuiteBtn}
-              onPress={handleSwitchToInventory}
-              activeOpacity={0.8}
-            >
-              <Icon name="package" size={18} color={theme.colors.primary} />
-              <View style={{ marginLeft: 10, flex: 1 }}>
-                <Text style={styles.switchBtnTitle}>Switch to Inventory Suite</Text>
-                <Text style={styles.switchBtnSub}>SKUs, stock adjustments & warehouses</Text>
-              </View>
-              <Icon name="chevronRight" size={16} color={theme.colors.muted} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.switchSuiteBtn, { marginTop: 8 }]}
-              onPress={() => setIsAppLauncherOpen(true)}
-              activeOpacity={0.8}
-            >
-              <Icon name="appLauncher" size={18} color={theme.colors.navy} />
-              <View style={{ marginLeft: 10, flex: 1 }}>
-                <Text style={[styles.switchBtnTitle, { color: theme.colors.navy }]}>
-                  All Business Suites
-                </Text>
-                <Text style={styles.switchBtnSub}>Browse apps & permissions</Text>
-              </View>
-              <Icon name="chevronRight" size={16} color={theme.colors.muted} />
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -147,12 +98,6 @@ export const PosAccountScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           <Button label="Sign Out Cashier" variant="danger" onPress={handleLogout} />
         </View>
       </ScrollView>
-
-      {/* App Launcher Modal */}
-      <AppLauncherModal
-        visible={isAppLauncherOpen}
-        onClose={() => setIsAppLauncherOpen(false)}
-      />
     </SafeAreaView>
   );
 };
@@ -234,28 +179,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: theme.colors.muted,
     marginBottom: 12
-  },
-  switchButtonRow: {
-    gap: 8
-  },
-  switchSuiteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surfaceSubtle,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  switchBtnTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: theme.colors.primary
-  },
-  switchBtnSub: {
-    fontSize: 10,
-    color: theme.colors.muted,
-    marginTop: 1
   },
   metaList: {
     marginTop: 4

@@ -16,12 +16,10 @@ import { Icon } from '../../components/common/Icon';
 import { Badge } from '../../components/common/Badge';
 import { useRestaurant } from '../../context/RestaurantContext';
 import { useTenant } from '../../context/TenantContext';
-import { useApp } from '../../context/AppContext';
 import { RestaurantTable, TableStatus } from '@infinityhub/types';
 import { RestaurantQuickSeatModal } from '../../components/restaurant/RestaurantQuickSeatModal';
 import { RestaurantSettlementModal } from '../../components/restaurant/RestaurantSettlementModal';
 import { RestaurantManagerPinModal } from '../../components/restaurant/RestaurantManagerPinModal';
-import { AppLauncherModal } from '../../components/modals/AppLauncherModal';
 
 export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { tenant } = useTenant();
@@ -41,7 +39,6 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
   const [transferSourceTable, setTransferSourceTable] = useState<RestaurantTable | null>(null);
   const [transferTargetId, setTransferTargetId] = useState<string>('');
   const [isTransferModalOpen, setIsTransferModalOpen] = useState<boolean>(false);
-  const [isAppLauncherOpen, setIsAppLauncherOpen] = useState<boolean>(false);
 
   // Filter tables
   const filteredTables = useMemo(() => {
@@ -237,15 +234,6 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
             Floor Occupancy: {occupancyStats.occupiedCount} / {occupancyStats.totalTables} Tables ({occupancyStats.occupancyRate}%)
           </Text>
         </View>
-
-        <TouchableOpacity
-          style={styles.appSwitchBtn}
-          onPress={() => setIsAppLauncherOpen(true)}
-          activeOpacity={0.7}
-        >
-          <Icon name="appLauncher" size={16} color={theme.colors.navy} />
-          <Text style={styles.appSwitchText}>Suites</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Sections Horizontal Pill Bar */}
@@ -326,12 +314,6 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
           navigation.navigate('RestaurantReceipt', { invoice });
         }}
       />
-
-      {/* App Launcher Modal */}
-      <AppLauncherModal
-        visible={isAppLauncherOpen}
-        onClose={() => setIsAppLauncherOpen(false)}
-      />
     </SafeAreaView>
   );
 };
@@ -361,22 +343,6 @@ const styles = StyleSheet.create({
     color: theme.colors.muted,
     marginTop: 2,
     fontWeight: '500'
-  },
-  appSwitchBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.surfaceSubtle,
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  appSwitchText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: theme.colors.navy
   },
   filterScrollWrap: {
     backgroundColor: '#FFFFFF',

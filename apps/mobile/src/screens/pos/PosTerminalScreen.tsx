@@ -25,7 +25,6 @@ import { Product } from '@infinityhub/types';
 import { MobileDiscountModal } from '../../components/pos/MobileDiscountModal';
 import { MobilePaymentModal } from '../../components/pos/MobilePaymentModal';
 import { MobileShiftModal } from '../../components/pos/MobileShiftModal';
-import { AppLauncherModal } from '../../components/modals/AppLauncherModal';
 
 export const PosTerminalScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { products, categories } = useTenant();
@@ -53,7 +52,6 @@ export const PosTerminalScreen: React.FC<{ navigation: any }> = ({ navigation })
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState<boolean>(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const [isShiftModalOpen, setIsShiftModalOpen] = useState<boolean>(false);
-  const [isAppLauncherOpen, setIsAppLauncherOpen] = useState<boolean>(false);
 
   // Filter products by search and category
   const filteredProducts = useMemo(() => {
@@ -155,13 +153,6 @@ export const PosTerminalScreen: React.FC<{ navigation: any }> = ({ navigation })
           </View>
           <Text style={styles.gstinText}>GSTIN: {taxConfig.gstin} | State: {taxConfig.stateCode}</Text>
         </View>
-
-        <TouchableOpacity
-          style={styles.appSwitchBtn}
-          onPress={() => setIsAppLauncherOpen(true)}
-        >
-          <Icon name="appLauncher" size={18} color={theme.colors.primary} />
-        </TouchableOpacity>
       </View>
 
       {/* Search Bar & Barcode Scanner Button */}
@@ -405,12 +396,6 @@ export const PosTerminalScreen: React.FC<{ navigation: any }> = ({ navigation })
         onOpenShift={openShift}
         onCloseShift={closeShift}
       />
-
-      {/* App Suite Switcher */}
-      <AppLauncherModal
-        visible={isAppLauncherOpen}
-        onClose={() => setIsAppLauncherOpen(false)}
-      />
     </SafeAreaView>
   );
 };
@@ -472,14 +457,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: theme.colors.muted,
     marginTop: 2
-  },
-  appSwitchBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: theme.colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center'
   },
   searchBarRow: {
     flexDirection: 'row',

@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
 import { Icon } from '../common/Icon';
 import { useTenant } from '../../context/TenantContext';
 import { useAuth } from '../../context/AuthContext';
-import { AppLauncherModal } from '../modals/AppLauncherModal';
 
 interface AppHeaderProps {
   navigation?: any;
@@ -16,7 +15,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ navigation }) => {
   const nav = navigation || localNav;
   const { tenant } = useTenant();
   const { user } = useAuth();
-  const [isLauncherVisible, setIsLauncherVisible] = useState(false);
 
   const userInitials = user?.name
     ? user.name
@@ -28,67 +26,47 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ navigation }) => {
     : 'OP';
 
   return (
-    <>
-      <View style={styles.header}>
-        {/* Store Identity with Suite Switcher trigger */}
-        <TouchableOpacity
-          style={styles.storeInfoWrap}
-          onPress={() => setIsLauncherVisible(true)}
-          activeOpacity={0.7}
-          accessibilityLabel="Switch application suite"
-        >
-          <View style={styles.storeIconWrap}>
-            <Icon name="store" size={16} color={theme.colors.primary} />
-          </View>
-          <View style={styles.storeTextWrap}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.storeName} numberOfLines={1}>
-                {tenant.name}
+    <View style={styles.header}>
+      {/* Store Identity */}
+      <View style={styles.storeInfoWrap}>
+        <View style={styles.storeIconWrap}>
+          <Icon name="store" size={16} color={theme.colors.primary} />
+        </View>
+        <View style={styles.storeTextWrap}>
+          <Text style={styles.storeName} numberOfLines={1}>
+            {tenant.name}
+          </Text>
+          <View style={styles.badgeRow}>
+            <View style={styles.planPill}>
+              <Text style={styles.planPillText}>
+                {user?.role === 'SUPER_ADMIN' ? 'Platform Admin' : `${tenant.planName || 'Starter'} Plan`}
               </Text>
-              <Icon
-                name="chevronRight"
-                size={12}
-                color={theme.colors.muted}
-                style={{ marginLeft: 3, transform: [{ rotate: '90deg' }] }}
-              />
-            </View>
-            <View style={styles.badgeRow}>
-              <View style={styles.planPill}>
-                <Text style={styles.planPillText}>
-                  {user?.role === 'SUPER_ADMIN' ? 'Platform Admin' : `${tenant.planName || 'Starter'} Plan`}
-                </Text>
-              </View>
             </View>
           </View>
-        </TouchableOpacity>
-
-        {/* Right Actions: Quick Scanner Shortcut + Profile Avatar */}
-        <View style={styles.rightActions}>
-          <TouchableOpacity
-            style={styles.iconActionBtn}
-            onPress={() => nav?.navigate('Scanner')}
-            activeOpacity={0.75}
-            accessibilityLabel="Open Barcode Scanner"
-          >
-            <Icon name="barcode" size={18} color={theme.colors.navy} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.avatarBtn}
-            onPress={() => nav?.navigate('ProfileTab')}
-            activeOpacity={0.8}
-            accessibilityLabel="View Account"
-          >
-            <Text style={styles.avatarText}>{userInitials}</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
-      <AppLauncherModal
-        visible={isLauncherVisible}
-        onClose={() => setIsLauncherVisible(false)}
-      />
-    </>
+      {/* Right Actions: Quick Scanner Shortcut + Profile Avatar */}
+      <View style={styles.rightActions}>
+        <TouchableOpacity
+          style={styles.iconActionBtn}
+          onPress={() => nav?.navigate('Scanner')}
+          activeOpacity={0.75}
+          accessibilityLabel="Open Barcode Scanner"
+        >
+          <Icon name="barcode" size={18} color={theme.colors.navy} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.avatarBtn}
+          onPress={() => nav?.navigate('ProfileTab')}
+          activeOpacity={0.8}
+          accessibilityLabel="View Account"
+        >
+          <Text style={styles.avatarText}>{userInitials}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 

@@ -287,10 +287,12 @@ export const ReportsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
                     </View>
 
                     <Button
+                      size="sm"
                       label="Reorder"
                       onPress={() => navigation.navigate('StockAdjustment', { product: prod })}
                       variant="outline"
                       style={styles.reorderBtn}
+                      textStyle={styles.reorderBtnText}
                     />
                   </View>
                 );
@@ -551,7 +553,17 @@ const styles = StyleSheet.create({
   },
   reorderBtn: {
     height: 32,
-    paddingHorizontal: 12
+    minWidth: 76,
+    paddingVertical: 0,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center'
+  },
+  reorderBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 16
   },
   auditCard: {
     flexDirection: 'row',

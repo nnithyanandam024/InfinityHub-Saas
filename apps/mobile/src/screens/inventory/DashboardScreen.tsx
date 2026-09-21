@@ -319,37 +319,47 @@ export const DashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) =
         {/* Recent Stock Movement Ledger */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Stock Activity</Text>
-          <View style={styles.ledgerCard}>
-            {stockMovements.slice(0, 4).map((mov, index) => {
-              const isPos = mov.quantityChange > 0;
-              return (
-                <View
-                  key={mov.id}
-                  style={[
-                    styles.movementRow,
-                    index < Math.min(stockMovements.length, 4) - 1 && styles.movementRowBorder
-                  ]}
-                >
-                  <View style={[styles.movementIconPill, { backgroundColor: isPos ? '#ECFDF5' : '#EFF6FF' }]}>
-                    <Icon
-                      name={isPos ? 'plus' : 'minus'}
-                      size={12}
-                      color={isPos ? theme.colors.success : theme.colors.primary}
-                    />
-                  </View>
+          {stockMovements.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Icon name="clock" size={24} color={theme.colors.muted} />
+              <Text style={styles.emptyTitle}>No recent stock activity</Text>
+              <Text style={styles.emptySubtitle}>
+                Inventory adjustments, receipts, and transfers will show here.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.ledgerCard}>
+              {stockMovements.slice(0, 4).map((mov, index) => {
+                const isPos = mov.quantityChange > 0;
+                return (
+                  <View
+                    key={mov.id}
+                    style={[
+                      styles.movementRow,
+                      index < Math.min(stockMovements.length, 4) - 1 && styles.movementRowBorder
+                    ]}
+                  >
+                    <View style={[styles.movementIconPill, { backgroundColor: isPos ? '#ECFDF5' : '#EFF6FF' }]}>
+                      <Icon
+                        name={isPos ? 'plus' : 'minus'}
+                        size={12}
+                        color={isPos ? theme.colors.success : theme.colors.primary}
+                      />
+                    </View>
 
-                  <View style={{ flex: 1, marginLeft: 10 }}>
-                    <Text style={styles.movProduct} numberOfLines={1}>{mov.productName}</Text>
-                    <Text style={styles.movReason}>{mov.reason || mov.type}</Text>
-                  </View>
+                    <View style={{ flex: 1, marginLeft: 10 }}>
+                      <Text style={styles.movProduct} numberOfLines={1}>{mov.productName}</Text>
+                      <Text style={styles.movReason}>{mov.reason || mov.type}</Text>
+                    </View>
 
-                  <Text style={[styles.movQty, isPos ? styles.movQtyPos : styles.movQtyNeg]}>
-                    {isPos ? `+${mov.quantityChange}` : mov.quantityChange}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
+                    <Text style={[styles.movQty, isPos ? styles.movQtyPos : styles.movQtyNeg]}>
+                      {isPos ? `+${mov.quantityChange}` : mov.quantityChange}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
 
         <View style={{ height: 24 }} />

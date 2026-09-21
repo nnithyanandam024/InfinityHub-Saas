@@ -35,7 +35,8 @@ export type IconName =
   | 'table'
   | 'chefHat'
   | 'fire'
-  | 'dish';
+  | 'dish'
+  | 'clock';
 
 interface IconProps {
   name: IconName;
@@ -499,6 +500,44 @@ export const Icon: React.FC<IconProps> = ({
           <View style={{ width: s * 0.76, height: s * 0.38, borderTopLeftRadius: s * 0.38, borderTopRightRadius: s * 0.38, borderWidth: 1.8, borderColor: color, borderBottomWidth: 0 }} />
           {/* Cloche Plate Base */}
           <View style={{ width: s * 0.88, height: 2, backgroundColor: color, borderRadius: 1 }} />
+        </View>
+      );
+
+    case 'clock':
+      return (
+        <View style={[{ width: s, height: s, alignItems: 'center', justifyContent: 'center' }, style]}>
+          <View
+            style={{
+              width: s * 0.85,
+              height: s * 0.85,
+              borderRadius: s * 0.425,
+              borderWidth: 1.8,
+              borderColor: color,
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <View
+              style={{
+                position: 'absolute',
+                top: s * 0.16,
+                width: 1.8,
+                height: s * 0.28,
+                backgroundColor: color,
+                borderRadius: 1
+              }}
+            />
+            <View
+              style={{
+                position: 'absolute',
+                right: s * 0.16,
+                width: s * 0.24,
+                height: 1.8,
+                backgroundColor: color,
+                borderRadius: 1
+              }}
+            />
+          </View>
         </View>
       );
 
