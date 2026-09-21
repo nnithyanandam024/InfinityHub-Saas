@@ -14,7 +14,7 @@ import {
   Animated,
   DeviceEventEmitter
 } from 'react-native';
-import { Camera, CameraType, TorchMode } from 'react-native-camera-kit';
+import { Camera, CameraType } from 'react-native-camera-kit';
 import { theme } from '../../theme';
 import { Icon } from '../../components/common/Icon';
 import { Badge } from '../../components/common/Badge';
@@ -186,9 +186,9 @@ export const BarcodeScannerScreen: React.FC<{ navigation: any; route?: any }> = 
             {hasPermission ? (
               <Camera
                 style={styles.cameraView}
-                cameraType={CameraType.Back}
+                cameraType={CameraType?.Back || 'back'}
                 scanBarcode={isScanning}
-                torchMode={isTorchOn ? TorchMode.On : TorchMode.Off}
+                torchMode={isTorchOn ? 'on' : 'off'}
                 showFrame={false}
                 onReadCode={(event: any) => {
                   const code = event?.nativeEvent?.codeStringValue;
