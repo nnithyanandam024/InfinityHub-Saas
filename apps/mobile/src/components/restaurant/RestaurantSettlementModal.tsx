@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import * as ReactNative from 'react-native';
 const Modal = (ReactNative as any).Modal;
+const KeyboardAvoidingView = (ReactNative as any).KeyboardAvoidingView;
 import { theme } from '../../theme';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
@@ -148,177 +149,234 @@ export const RestaurantSettlementModal: React.FC<RestaurantSettlementModalProps>
     }
   };
 
+  const handleQuickCash = (amount: number | 'exact') => {
+    if (amount === 'exact') {
+      setTenderedInput(String(calculations.grandTotal));
+    } else {
+      setTenderedInput(String(amount));
+    }
+  };
+
   return (
     <Modal
       visible={visible}
       transparent
       animationType="slide"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
-      <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity activeOpacity={1} style={{ width: '100%', maxHeight: '90%' }}>
-          <View style={styles.sheet}>
-            {/* Header */}
-            <View style={styles.header}>
-              <View>
-                <Text style={styles.title}>Bill Settlement · Table {table.tableNumber}</Text>
-                <Text style={styles.subtitle}>Captain: {table.captainName || 'Rajesh'} · Order {order.orderNumber}</Text>
-              </View>
-              <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                <Icon name="close" size={16} color={theme.colors.body} />
-              </TouchableOpacity>
-            </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.backdrop}
+      >
+        <TouchableOpacity
+          style={styles.backdropTouch}
+          activeOpacity={1}
+          onPress={onClose}
+        />
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Order Items Preview */}
-              <View style={styles.card}>
+        <View style={styles.sheet}>
+          {/* Top Handle */}
+          <View style={styles.handle} />
+
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.title}>Bill Settlement · Table {table.tableNumber}</Text>
+              <Text style={styles.subtitle}>
+                Captain: {table.captainName || 'Staff'} · Order {order.orderNumber}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeBtn}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Icon name="close" size={16} color={theme.colors.body} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Scrollable Form Content */}
+          <ScrollView
+            style={styles.scrollArea}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Order Items Summary Card */}
+            <View style={styles.card}>
+              <View style={styles.cardHeaderRow}>
                 <Text style={styles.cardTitle}>Itemized Order Summary</Text>
                 {order.kots && order.kots.length > 0 ? (
-                  order.kots.map(kot => (
-                    <View key={kot.id} style={styles.kotSection}>
-                      <Text style={styles.kotHeader}>{kot.kotNumber} · Station: {kot.station.toUpperCase()}</Text>
-                      {kot.items.map(item => (
-                        <View key={item.id} style={styles.itemRow}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={[styles.itemName, item.status === 'cancelled' && styles.itemCancelled]}>
-                              {item.name} x{item.quantity}
-                            </Text>
-                            {item.status === 'cancelled' ? (
-                              <Text style={styles.cancelReason}>Voided: {item.cancelledReason}</Text>
-                            ) : null}
-                          </View>
-                          <Text style={[styles.itemPrice, item.status === 'cancelled' && styles.itemCancelled]}>
-                            {item.status === 'cancelled' ? 'Void' : `₹${item.unitPrice * item.quantity}`}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  ))
-                ) : (
-                  <View style={styles.itemRow}>
-                    <Text style={styles.itemName}>Dining Charges (Table {table.tableNumber})</Text>
-                    <Text style={styles.itemPrice}>₹{calculations.subtotal}</Text>
-                  </View>
-                )}
-              </View>
-
-              {/* Tax Breakdown */}
-              <View style={styles.breakdownCard}>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Food Subtotal</Text>
-                  <Text style={styles.summaryValue}>₹{calculations.subtotal}</Text>
-                </View>
-
-                {calculations.discount > 0 ? (
-                  <View style={styles.summaryRow}>
-                    <Text style={[styles.summaryLabel, { color: theme.colors.successText }]}>Discount Applied</Text>
-                    <Text style={[styles.summaryValue, { color: theme.colors.successText }]}>-₹{calculations.discount}</Text>
-                  </View>
+                  <Text style={styles.cardBadgeText}>
+                    {order.kots.reduce((acc, k) => acc + k.items.length, 0)} Items
+                  </Text>
                 ) : null}
-
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>CGST (2.5%)</Text>
-                  <Text style={styles.summaryValue}>₹{calculations.cgst.toFixed(2)}</Text>
-                </View>
-
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>SGST (2.5%)</Text>
-                  <Text style={styles.summaryValue}>₹{calculations.sgst.toFixed(2)}</Text>
-                </View>
-
-                <View style={[styles.summaryRow, styles.grandTotalRow]}>
-                  <Text style={styles.grandTotalLabel}>Grand Total</Text>
-                  <Text style={styles.grandTotalValue}>₹{calculations.grandTotal}</Text>
-                </View>
               </View>
 
-              {/* Payment Method Selector */}
-              <Text style={styles.sectionHeading}>Payment Tender</Text>
-              <View style={styles.tabsRow}>
-                {(['cash', 'upi', 'card'] as const).map(method => (
-                  <TouchableOpacity
-                    key={method}
-                    style={[styles.tabBtn, paymentMethod === method && styles.tabBtnActive]}
-                    onPress={() => setPaymentMethod(method)}
-                  >
-                    <Icon
-                      name={method === 'cash' ? 'cash' : method === 'upi' ? 'wallet' : 'receipt'}
-                      size={16}
-                      color={paymentMethod === method ? '#FFFFFF' : theme.colors.body}
-                    />
-                    <Text style={[styles.tabText, paymentMethod === method && styles.tabTextActive]}>
-                      {method.toUpperCase()}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              {order.kots && order.kots.length > 0 ? (
+                order.kots.map(kot => (
+                  <View key={kot.id} style={styles.kotSection}>
+                    <Text style={styles.kotHeader}>{kot.kotNumber} · Station: {kot.station.toUpperCase()}</Text>
+                    {kot.items.map(item => (
+                      <View key={item.id} style={styles.itemRow}>
+                        <View style={{ flex: 1, marginRight: 8 }}>
+                          <Text style={[styles.itemName, item.status === 'cancelled' && styles.itemCancelled]}>
+                            {item.name} x{item.quantity}
+                          </Text>
+                          {item.status === 'cancelled' ? (
+                            <Text style={styles.cancelReason}>Voided: {item.cancelledReason}</Text>
+                          ) : null}
+                        </View>
+                        <Text style={[styles.itemPrice, item.status === 'cancelled' && styles.itemCancelled]}>
+                          {item.status === 'cancelled' ? 'Void' : `₹${item.unitPrice * item.quantity}`}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ))
+              ) : (
+                <View style={styles.itemRow}>
+                  <Text style={styles.itemName}>Dining Charges (Table {table.tableNumber})</Text>
+                  <Text style={styles.itemPrice}>₹{calculations.subtotal}</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Bill Breakdown Card */}
+            <View style={styles.breakdownCard}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Food Subtotal</Text>
+                <Text style={styles.summaryValue}>₹{calculations.subtotal}</Text>
               </View>
 
-              {/* Tender specific inputs */}
-              {paymentMethod === 'cash' ? (
-                <View style={styles.cashContainer}>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Tendered Cash (₹)</Text>
-                    <TextInput
-                      style={styles.input}
-                      keyboardType="numeric"
-                      value={tenderedInput}
-                      onChangeText={setTenderedInput}
-                      placeholder="Enter received cash"
-                      placeholderTextColor={theme.colors.muted}
-                    />
-                  </View>
-
-                  <View style={styles.changeDueRow}>
-                    <Text style={styles.changeDueLabel}>Change Due to Customer:</Text>
-                    <Text style={[styles.changeDueAmount, isCashShort && { color: theme.colors.danger }]}>
-                      {isCashShort ? 'Short Amount' : `₹${changeDue}`}
-                    </Text>
-                  </View>
+              {calculations.discount > 0 ? (
+                <View style={styles.summaryRow}>
+                  <Text style={[styles.summaryLabel, { color: theme.colors.successText }]}>Discount Applied</Text>
+                  <Text style={[styles.summaryValue, { color: theme.colors.successText }]}>-₹{calculations.discount}</Text>
                 </View>
               ) : null}
 
-              {/* Customer Info (Optional) */}
-              <View style={styles.customerSection}>
-                <Text style={styles.sectionHeading}>Customer Details (Optional)</Text>
-                <View style={styles.row}>
-                  <TextInput
-                    style={[styles.input, { flex: 1, marginRight: 8 }]}
-                    placeholder="Customer Name"
-                    placeholderTextColor={theme.colors.muted}
-                    value={customerName}
-                    onChangeText={setCustomerName}
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>CGST (2.5%)</Text>
+                <Text style={styles.summaryValue}>₹{calculations.cgst.toFixed(2)}</Text>
+              </View>
+
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>SGST (2.5%)</Text>
+                <Text style={styles.summaryValue}>₹{calculations.sgst.toFixed(2)}</Text>
+              </View>
+
+              <View style={[styles.summaryRow, styles.grandTotalRow]}>
+                <Text style={styles.grandTotalLabel}>Grand Total</Text>
+                <Text style={styles.grandTotalValue}>₹{calculations.grandTotal}</Text>
+              </View>
+            </View>
+
+            {/* Payment Method Selector */}
+            <Text style={styles.sectionHeading}>Payment Tender</Text>
+            <View style={styles.tabsRow}>
+              {(['cash', 'upi', 'card'] as const).map(method => (
+                <TouchableOpacity
+                  key={method}
+                  style={[styles.tabBtn, paymentMethod === method && styles.tabBtnActive]}
+                  onPress={() => setPaymentMethod(method)}
+                >
+                  <Icon
+                    name={method === 'cash' ? 'cash' : method === 'upi' ? 'wallet' : 'receipt'}
+                    size={16}
+                    color={paymentMethod === method ? '#FFFFFF' : theme.colors.body}
                   />
+                  <Text style={[styles.tabText, paymentMethod === method && styles.tabTextActive]}>
+                    {method.toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Cash Tender Details */}
+            {paymentMethod === 'cash' ? (
+              <View style={styles.cashContainer}>
+                <View style={styles.quickDenomsRow}>
+                  <TouchableOpacity
+                    style={styles.quickChip}
+                    onPress={() => handleQuickCash('exact')}
+                  >
+                    <Text style={styles.quickChipText}>Exact ₹{calculations.grandTotal}</Text>
+                  </TouchableOpacity>
+                  {[500, 1000, 2000].map(amt => (
+                    <TouchableOpacity
+                      key={amt}
+                      style={styles.quickChip}
+                      onPress={() => handleQuickCash(amt)}
+                    >
+                      <Text style={styles.quickChipText}>₹{amt}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Tendered Cash (₹)</Text>
                   <TextInput
-                    style={[styles.input, { flex: 1 }]}
-                    placeholder="Phone (SMS Receipt)"
+                    style={styles.input}
+                    keyboardType="numeric"
+                    value={tenderedInput}
+                    onChangeText={setTenderedInput}
+                    placeholder="Enter received cash"
                     placeholderTextColor={theme.colors.muted}
-                    keyboardType="phone-pad"
-                    value={customerPhone}
-                    onChangeText={setCustomerPhone}
                   />
                 </View>
-              </View>
-            </ScrollView>
 
-            {/* Actions */}
-            <View style={styles.footer}>
-              <Button
-                label="Cancel"
-                variant="outline"
-                onPress={onClose}
-                style={{ flex: 1 }}
-              />
-              <Button
-                label={isSubmitting ? 'Settling...' : `Settle ₹${calculations.grandTotal}`}
-                variant="primary"
-                onPress={handleSettle}
-                disabled={isSubmitting || isCashShort}
-                style={{ flex: 2 }}
-              />
+                <View style={styles.changeDueRow}>
+                  <Text style={styles.changeDueLabel}>Change Due to Customer:</Text>
+                  <Text style={[styles.changeDueAmount, isCashShort && { color: theme.colors.danger }]}>
+                    {isCashShort ? 'Short Amount' : `₹${changeDue}`}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
+            {/* Customer Details (Optional) */}
+            <View style={styles.customerSection}>
+              <Text style={styles.sectionHeading}>Customer Details (Optional)</Text>
+              <View style={styles.customerRow}>
+                <TextInput
+                  style={[styles.input, { flex: 1, marginRight: 8 }]}
+                  placeholder="Customer Name"
+                  placeholderTextColor={theme.colors.muted}
+                  value={customerName}
+                  onChangeText={setCustomerName}
+                />
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Phone (SMS Receipt)"
+                  placeholderTextColor={theme.colors.muted}
+                  keyboardType="phone-pad"
+                  value={customerPhone}
+                  onChangeText={setCustomerPhone}
+                />
+              </View>
             </View>
+          </ScrollView>
+
+          {/* Action Footer Docked at Bottom */}
+          <View style={styles.footer}>
+            <Button
+              label="Cancel"
+              variant="outline"
+              onPress={onClose}
+              style={styles.cancelBtn}
+            />
+            <Button
+              label={isSubmitting ? 'Settling...' : `Settle ₹${calculations.grandTotal}`}
+              variant="primary"
+              onPress={handleSettle}
+              disabled={isSubmitting || isCashShort}
+              style={styles.settleBtn}
+            />
           </View>
-        </TouchableOpacity>
-      </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -329,23 +387,36 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'flex-end'
   },
+  backdropTouch: {
+    flex: 1
+  },
   sheet: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: theme.radii.sheet,
-    borderTopRightRadius: theme.radii.sheet,
-    padding: theme.spacing.xl,
-    paddingBottom: Platform.OS === 'ios' ? 36 : theme.spacing.xl,
-    maxHeight: '90%'
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    maxHeight: '92%',
+    width: '100%'
+  },
+  handle: {
+    width: 38,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: theme.colors.border,
+    alignSelf: 'center',
+    marginBottom: 12
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: theme.spacing.md
+    alignItems: 'center',
+    marginBottom: 12
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: theme.colors.navy
   },
   subtitle: {
@@ -354,12 +425,18 @@ const styles = StyleSheet.create({
     marginTop: 2
   },
   closeBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: theme.colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  scrollArea: {
+    flexGrow: 0
+  },
+  scrollContent: {
+    paddingBottom: 8
   },
   card: {
     borderWidth: 1,
@@ -367,14 +444,25 @@ const styles = StyleSheet.create({
     borderRadius: theme.radii.md,
     padding: theme.spacing.md,
     backgroundColor: theme.colors.background,
-    marginBottom: 12
+    marginBottom: 10
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8
   },
   cardTitle: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '800',
     color: theme.colors.navy,
-    marginBottom: 8,
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
+  },
+  cardBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.muted
   },
   kotSection: {
     marginBottom: 8,
@@ -397,11 +485,11 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 13,
     color: theme.colors.navy,
-    fontWeight: '500'
+    fontWeight: '600'
   },
   itemPrice: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     color: theme.colors.navy
   },
   itemCancelled: {
@@ -416,13 +504,13 @@ const styles = StyleSheet.create({
   breakdownCard: {
     backgroundColor: theme.colors.surfaceSubtle,
     borderRadius: theme.radii.md,
-    padding: theme.spacing.md,
-    marginBottom: 14
+    padding: 12,
+    marginBottom: 12
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 3
+    paddingVertical: 2
   },
   summaryLabel: {
     fontSize: 12,
@@ -437,7 +525,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
     marginTop: 6,
-    paddingTop: 8
+    paddingTop: 8,
+    alignItems: 'center'
   },
   grandTotalLabel: {
     fontSize: 15,
@@ -445,21 +534,22 @@ const styles = StyleSheet.create({
     color: theme.colors.navy
   },
   grandTotalValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     color: theme.colors.primary
   },
   sectionHeading: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: theme.colors.body,
-    marginBottom: 8,
-    textTransform: 'uppercase'
+    fontSize: 11,
+    fontWeight: '800',
+    color: theme.colors.muted,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
   },
   tabsRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 12
+    marginBottom: 10
   },
   tabBtn: {
     flex: 1,
@@ -467,7 +557,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
+    paddingVertical: 9,
     borderRadius: theme.radii.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -486,7 +576,25 @@ const styles = StyleSheet.create({
     color: '#FFFFFF'
   },
   cashContainer: {
-    marginBottom: 12
+    marginBottom: 10
+  },
+  quickDenomsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 8
+  },
+  quickChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: theme.colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: theme.colors.border
+  },
+  quickChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.navy
   },
   inputGroup: {
     marginBottom: 6
@@ -502,7 +610,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     borderRadius: theme.radii.md,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 9,
     fontSize: 14,
     color: theme.colors.navy,
     backgroundColor: '#FFFFFF'
@@ -515,22 +623,32 @@ const styles = StyleSheet.create({
   },
   changeDueLabel: {
     fontSize: 12,
+    fontWeight: '600',
     color: theme.colors.body
   },
   changeDueAmount: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
     color: theme.colors.successText
   },
   customerSection: {
-    marginBottom: 16
+    marginBottom: 8
   },
-  row: {
+  customerRow: {
     flexDirection: 'row'
   },
   footer: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 10
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    marginTop: 4
+  },
+  cancelBtn: {
+    flex: 1
+  },
+  settleBtn: {
+    flex: 1.8
   }
 });

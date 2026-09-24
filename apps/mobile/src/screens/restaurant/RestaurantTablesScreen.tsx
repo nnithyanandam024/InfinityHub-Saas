@@ -23,6 +23,7 @@ import { RestaurantTable, TableStatus } from '@infinityhub/types';
 import { RestaurantQuickSeatModal } from '../../components/restaurant/RestaurantQuickSeatModal';
 import { RestaurantSettlementModal } from '../../components/restaurant/RestaurantSettlementModal';
 import { RestaurantTableDetailsModal } from '../../components/restaurant/RestaurantTableDetailsModal';
+import { RestaurantTableVacateModal } from '../../components/restaurant/RestaurantTableVacateModal';
 import { RestaurantManagerPinModal } from '../../components/restaurant/RestaurantManagerPinModal';
 
 export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -41,9 +42,27 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
   const [seatModalTable, setSeatModalTable] = useState<RestaurantTable | null>(null);
   const [detailsModalTable, setDetailsModalTable] = useState<RestaurantTable | null>(null);
   const [settleModalTable, setSettleModalTable] = useState<RestaurantTable | null>(null);
+  const [vacateModalTable, setVacateModalTable] = useState<RestaurantTable | null>(null);
   const [transferSourceTable, setTransferSourceTable] = useState<RestaurantTable | null>(null);
   const [transferTargetId, setTransferTargetId] = useState<string>('');
   const [isTransferModalOpen, setIsTransferModalOpen] = useState<boolean>(false);
+
+  // Hide floating tab bar when any modal is open
+  const isAnyModalOpen = !!(
+    settleModalTable ||
+    seatModalTable ||
+    detailsModalTable ||
+    vacateModalTable ||
+    isTransferModalOpen
+  );
+
+  React.useEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: isAnyModalOpen
+        ? { display: 'none' }
+        : { position: 'absolute', backgroundColor: 'transparent', borderTopWidth: 0, elevation: 0 }
+    });
+  }, [isAnyModalOpen, navigation]);
 
   // Filter tables
   const filteredTables = useMemo(() => {
@@ -62,17 +81,7 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
     }
 
     if (table.status === 'cleaning') {
-      Alert.alert(
-        'Table Cleaning',
-        `Reset Table ${table.tableNumber} to Vacant for next dining guests?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Mark Vacant',
-            onPress: () => resetTableToVacant(table.id)
-          }
-        ]
-      );
+      setVacateModalTable(table);
       return;
     }
 
@@ -350,6 +359,9 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
         onSettle={t => {
           setSettleModalTable(t);
         }}
+        onVacate={t => {
+          setVacateModalTable(t);
+        }}
       />
 
       {/* Quick Seat Modal */}
@@ -368,6 +380,14 @@ export const RestaurantTablesScreen: React.FC<{ navigation: any }> = ({ navigati
         onSettled={invoice => {
           navigation.navigate('RestaurantReceipt', { invoice });
         }}
+      />
+
+      {/* Table Vacate / Cleaning Reset Modal */}
+      <RestaurantTableVacateModal
+        visible={!!vacateModalTable}
+        table={vacateModalTable}
+        onClose={() => setVacateModalTable(null)}
+        onVacated={() => setVacateModalTable(null)}
       />
     </SafeAreaView>
   );

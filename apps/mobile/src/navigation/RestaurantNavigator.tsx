@@ -16,7 +16,13 @@ export const RestaurantNavigator: React.FC = () => {
     <RestaurantTab.Navigator
       tabBar={(props: any) => <FloatingTabBar {...props} />}
       screenOptions={{
-        headerShown: false
+        headerShown: false,
+        tabBarStyle: {
+          position: 'absolute',
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0
+        }
       }}
     >
       <RestaurantTab.Screen

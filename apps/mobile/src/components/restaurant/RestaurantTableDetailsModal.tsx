@@ -22,6 +22,7 @@ interface RestaurantTableDetailsModalProps {
   onClose: () => void;
   onOrder: (table: RestaurantTable) => void;
   onSettle: (table: RestaurantTable) => void;
+  onVacate?: (table: RestaurantTable) => void;
 }
 
 export const RestaurantTableDetailsModal: React.FC<RestaurantTableDetailsModalProps> = ({
@@ -29,7 +30,8 @@ export const RestaurantTableDetailsModal: React.FC<RestaurantTableDetailsModalPr
   table,
   onClose,
   onOrder,
-  onSettle
+  onSettle,
+  onVacate
 }) => {
   const { sections, orders, kots } = useRestaurant();
 
@@ -136,11 +138,19 @@ export const RestaurantTableDetailsModal: React.FC<RestaurantTableDetailsModalPr
       transparent
       animationType="slide"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
-      <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity activeOpacity={1} style={styles.sheetWrap}>
-          <View style={styles.sheet}>
-            {/* Header */}
+      <View style={styles.backdrop}>
+        <TouchableOpacity
+          style={styles.backdropTouch}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+        <View style={styles.sheet}>
+          {/* Top Indicator Handle */}
+          <View style={styles.handle} />
+
+          {/* Header */}
             <View style={styles.header}>
               <View style={{ flex: 1 }}>
                 <View style={styles.titleRow}>
@@ -289,6 +299,19 @@ export const RestaurantTableDetailsModal: React.FC<RestaurantTableDetailsModalPr
                 />
               ) : null}
 
+              {table.status === 'cleaning' || table.status === 'billed' ? (
+                <Button
+                  label="Vacate"
+                  variant="outline"
+                  icon="table"
+                  onPress={() => {
+                    onClose();
+                    if (onVacate) onVacate(table);
+                  }}
+                  style={{ minWidth: 80, backgroundColor: '#FFFFFF', marginRight: 8 }}
+                />
+              ) : null}
+
               <Button
                 label="Close"
                 variant="ghost"
@@ -297,11 +320,10 @@ export const RestaurantTableDetailsModal: React.FC<RestaurantTableDetailsModalPr
               />
             </View>
           </View>
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </Modal>
-  );
-};
+        </View>
+      </Modal>
+    );
+  };
 
 const styles = StyleSheet.create({
   backdrop: {
@@ -309,16 +331,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.55)',
     justifyContent: 'flex-end'
   },
-  sheetWrap: {
-    width: '100%',
-    maxHeight: '88%'
+  backdropTouch: {
+    flex: 1
   },
   sheet: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: theme.spacing.lg,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 20
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    maxHeight: '90%',
+    width: '100%'
+  },
+  handle: {
+    width: 38,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: theme.colors.border,
+    alignSelf: 'center',
+    marginBottom: 12
   },
   header: {
     flexDirection: 'row',
